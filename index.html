@@ -1,0 +1,1696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Our Services — Seasonal Lawn & Snow Care</title>
+
+<!--
+  ============================================================
+  HOW TO CUSTOMIZE THIS APP (no coding experience needed):
+
+  1. BUSINESS NAME / TAGLINE: search for "Our Services" and
+     "Year-round outdoor care" near the top of the <body>.
+
+  2. SERVICES & PRICES: search for "const OFFERINGS" — there are
+     two lists, one for Spring/Fall and one for Winter. Each line
+     is one service: change the name, price, or description text.
+
+  3. ABOUT PAGE: search for "id="about-view"" and edit the <p>
+     text with your own bio. To add a real photo, replace the
+     placeholder div with <img src="your-photo.jpg" ...>.
+
+  4. TIME SLOTS: search for "TIME_SLOTS" to add/change available
+     appointment times.
+
+  5. ADMIN LOGIN: search for "ADMIN_EMAIL" and "ADMIN_PASSWORD" to
+     change the admin sign-in. IMPORTANT: this app has no server, so
+     this password is stored in plain text in this file's code —
+     anyone who views the page source can read it. Don't reuse a
+     real/important password here.
+
+  This app saves bookings and cart items on this device using the
+  browser's built-in storage, so they stick around even if you close
+  and reopen the page. It doesn't send data to a server or process
+  real payments — for a shared calendar across devices or real
+  payments, you'd eventually need a backend service like Stripe.
+  ============================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --radius: 0.75rem;
+    --background: oklch(0.985 0.005 90);
+    --foreground: oklch(0.18 0.02 50);
+    --card: oklch(1 0 0);
+    --primary: oklch(0.45 0.14 35);
+    --primary-foreground: oklch(0.985 0.005 90);
+    --secondary: oklch(0.95 0.015 80);
+    --muted-foreground: oklch(0.5 0.02 60);
+    --accent: oklch(0.85 0.12 75);
+    --border: oklch(0.9 0.01 80);
+    --warm-bg: oklch(0.97 0.04 85);
+    --cool-bg: oklch(0.96 0.03 230);
+  }
+
+  html[data-theme="dark"] {
+    --background: oklch(0.19 0.015 50);
+    --foreground: oklch(0.95 0.005 90);
+    --card: oklch(0.24 0.015 50);
+    --primary: oklch(0.68 0.13 45);
+    --primary-foreground: oklch(0.16 0.01 50);
+    --secondary: oklch(0.28 0.015 60);
+    --muted-foreground: oklch(0.68 0.015 70);
+    --accent: oklch(0.5 0.1 75);
+    --border: oklch(0.34 0.015 60);
+    --warm-bg: oklch(0.27 0.03 70);
+    --cool-bg: oklch(0.26 0.025 230);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--background);
+    color: var(--foreground);
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .font-display {
+    font-family: 'Instrument Serif', ui-serif, Georgia, serif;
+    font-style: italic;
+  }
+
+  .view { display: none; min-height: 100vh; }
+  .view.active { display: block; }
+
+  .wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px 90px; }
+  .wrap-wide { max-width: 900px; margin: 0 auto; padding: 60px 24px 90px; }
+
+  .eyebrow {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.25em;
+    color: var(--muted-foreground);
+    text-align: center;
+  }
+
+  .big-title {
+    text-align: center;
+    font-size: clamp(2.5rem, 7vw, 5rem);
+    line-height: 1;
+    margin: 14px 0 0 0;
+  }
+
+  .subtitle {
+    text-align: center;
+    max-width: 480px;
+    margin: 20px auto 0;
+    color: var(--muted-foreground);
+    font-size: 1.05rem;
+  }
+
+  .back-link {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+  .back-link:hover { color: var(--foreground); }
+
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .cart-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: var(--foreground);
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: inherit;
+  }
+  .cart-badge {
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    padding: 1px 8px;
+  }
+
+  /* Home cards */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    margin-top: 50px;
+  }
+  @media (min-width: 640px) {
+    .cards-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  .service-card {
+    display: block;
+    text-align: left;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    padding: 32px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 20px 40px -25px rgba(0,0,0,0.2);
+  }
+  .service-card:hover { transform: translateY(-4px); }
+  .service-card.warm { background: var(--warm-bg); }
+  .service-card.cool { background: var(--cool-bg); }
+
+  .card-top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .card-tagline {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--muted-foreground);
+  }
+  .card-shop {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+  }
+  .card-season {
+    font-size: 2.6rem;
+    margin: 8px 0 20px 0;
+  }
+  .card-items { list-style: none; padding: 0; margin: 0; }
+  .card-items li {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+    font-size: 1.05rem;
+  }
+  .card-items li:last-child { border-bottom: none; }
+  .card-items li span.dash { color: var(--muted-foreground); }
+
+  footer.home-footer { text-align: center; margin-top: 60px; }
+
+  .pill-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    padding: 14px 30px;
+    border-radius: 999px;
+    text-decoration: none;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+  }
+  .pill-btn:hover { opacity: 0.9; }
+  .pill-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .footnote { margin-top: 24px; color: var(--muted-foreground); font-size: 0.9rem; text-align:center; }
+
+  /* Offering list (spring-fall / winter pages) */
+  .offering-list { list-style: none; margin: 40px 0 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+  .offering {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 26px;
+  }
+  .offering.warm { background: var(--warm-bg); }
+  .offering.cool { background: var(--cool-bg); }
+  .offering h2 { font-size: 1.5rem; margin: 0; }
+  .offering p { margin: 8px 0 0 0; color: var(--muted-foreground); }
+  .offering .price-col { text-align: right; flex-shrink: 0; }
+  .offering .price-col p { font-family: 'Inter', sans-serif; font-style: normal; color: var(--foreground); font-weight: 500; font-size: 1.05rem; margin:0; }
+  .add-btn {
+    margin-top: 10px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    border: none;
+    border-radius: 999px;
+    padding: 8px 20px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .add-btn:hover { opacity: 0.9; }
+
+  /* About page */
+  .about-photo {
+    margin-top: 40px;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--secondary);
+    height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+  }
+  .about-text { margin-top: 40px; font-size: 1.1rem; line-height: 1.7; }
+  .about-text p { margin: 0 0 18px 0; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 50;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: var(--card);
+    border-radius: 20px;
+    max-width: 420px;
+    width: 100%;
+    padding: 28px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+  }
+  .modal-close-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--secondary);
+    color: var(--foreground);
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close-btn:hover { opacity: 0.8; }
+  .modal-title { font-size: 1.6rem; margin: 0; }
+  .modal-sub { color: var(--muted-foreground); font-size: 0.9rem; margin: 6px 0 20px 0; font-family: 'Inter', sans-serif; font-style: normal; }
+
+  /* Calendar */
+  .cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .cal-nav-btn {
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .cal-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .cal-month-label { font-weight: 500; font-size: 0.95rem; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow {
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+    padding: 4px 0;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .cal-day.pad { visibility: hidden; }
+  .cal-day.disabled { color: var(--border); cursor: not-allowed; }
+  .cal-day.selected { background: var(--primary); color: var(--primary-foreground); }
+  .cal-day.booked-marker { border-color: var(--primary); font-weight: 700; }
+  .cal-day:not(.disabled):not(.pad):hover { border-color: var(--foreground); }
+
+  .time-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+  .time-slot-btn {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    background: none;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.9rem;
+  }
+  .time-slot-btn.selected { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  .time-slot-btn.taken {
+    background: rgba(0,0,0,0.05);
+    color: var(--muted-foreground);
+    font-weight: 700;
+    cursor: not-allowed;
+  }
+  .time-slot-taken-label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+  .modal-footer { margin-top: 24px; }
+  .full-btn { width: 100%; text-align: center; justify-content: center; }
+
+  /* Cart / checkout */
+  .cart-item-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 18px;
+    padding: 22px;
+  }
+  .cart-item-row h2 { margin: 0; font-size: 1.3rem; }
+  .cart-item-row .meta { color: var(--muted-foreground); font-size: 0.85rem; margin-top: 4px; font-family:'Inter',sans-serif; font-style:normal; }
+  .remove-btn {
+    margin-top: 8px;
+    background: none;
+    border: none;
+    color: var(--muted-foreground);
+    font-size: 0.75rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .remove-btn:hover { color: #b3261e; }
+
+  .total-row {
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--secondary);
+    border-radius: 18px;
+    padding: 20px 24px;
+  }
+  .total-row .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.15em; }
+  .total-row .amount { font-size: 1.8rem; }
+
+  .empty-box {
+    margin-top: 40px;
+    border: 1px dashed var(--border);
+    border-radius: 18px;
+    padding: 50px 20px;
+    text-align: center;
+    color: var(--muted-foreground);
+  }
+  .empty-box a { color: var(--foreground); }
+
+  .checkout-grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin-top: 40px; }
+  @media (min-width: 700px) { .checkout-grid { grid-template-columns: 1fr 1fr; } }
+  .panel { border: 1px solid var(--border); border-radius: 18px; padding: 24px; }
+  .recap-row { display: flex; justify-content: space-between; font-size: 0.9rem; border-bottom: 1px solid var(--border); padding: 10px 0; }
+  .recap-row:last-child { border-bottom: none; }
+  .recap-total { display: flex; justify-content: space-between; margin-top: 16px; font-size: 1.4rem; }
+
+  label.form-label { display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--muted-foreground); }
+  input.form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+  .form-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .fine-print { font-size: 0.7rem; color: var(--muted-foreground); text-align: center; margin-top: 10px; }
+
+  /* Confirmation */
+  .check-circle {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: color-mix(in oklch, var(--primary) 12%, white);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem;
+    margin: 0 auto;
+  }
+  .appt-row {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid var(--border);
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+  }
+  .appt-row .meta { font-size: 0.85rem; color: var(--muted-foreground); font-family:'Inter',sans-serif; font-style:normal; }
+
+  /* Theme toggle */
+  .theme-toggle {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 60;
+    width: 42px;
+    height: 42px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--foreground);
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 18px -8px rgba(0,0,0,0.25);
+  }
+  .theme-toggle:hover { opacity: 0.85; }
+
+  /* Account widget */
+  .account-widget {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px 8px 8px;
+    box-shadow: 0 6px 18px -8px rgba(0,0,0,0.25);
+    font-size: 0.85rem;
+  }
+  .account-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .account-widget button {
+    background: none;
+    border: none;
+    color: var(--foreground);
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+    padding: 0;
+  }
+  .account-widget .logout-link { color: var(--muted-foreground); font-size: 0.75rem; text-decoration: underline; }
+  .signin-note { font-size: 0.8rem; color: var(--muted-foreground); margin: -8px 0 16px 0; }
+
+  .app-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--foreground);
+    color: var(--background);
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 100;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.4);
+  }
+  .app-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch light/dark mode">🌙</button>
+<div class="account-widget" id="account-widget"></div>
+
+<!-- ================= HOME ================= -->
+<div id="home-view" class="view active">
+  <div class="wrap">
+    <p class="eyebrow">Year-round outdoor care</p>
+    <h1 class="big-title font-display">Our Services</h1>
+    <p class="subtitle">From the first thaw to the last flurry — we keep your property looking sharp every season of the year.</p>
+
+    <div class="cards-grid">
+      <div class="service-card warm" onclick="navigateTo('springfall-view')">
+        <div class="card-top-row">
+          <span class="card-tagline">Green seasons</span>
+          <span class="card-shop">Shop →</span>
+        </div>
+        <h2 class="card-season font-display">Spring – Fall</h2>
+        <ul class="card-items">
+          <li><span class="dash">—</span> Lawn mowing</li>
+          <li><span class="dash">—</span> Leaf blowing</li>
+          <li><span class="dash">—</span> Weed whacking</li>
+          <li><span class="dash">—</span> Plant watering</li>
+        </ul>
+      </div>
+
+      <div class="service-card cool" onclick="navigateTo('winter-view')">
+        <div class="card-top-row">
+          <span class="card-tagline">Cold seasons</span>
+          <span class="card-shop">Shop →</span>
+        </div>
+        <h2 class="card-season font-display">Winter</h2>
+        <ul class="card-items">
+          <li><span class="dash">—</span> Snow plowing</li>
+          <li><span class="dash">—</span> Shoveling snow</li>
+          <li><span class="dash">—</span> Car cleaning (snow)</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer class="home-footer">
+      <button class="pill-btn" onclick="navigateTo('about-view')">About the Creators →</button>
+      <p class="footnote">Serving the neighborhood, one season at a time.</p>
+    </footer>
+  </div>
+</div>
+
+<!-- ================= SPRING / FALL ================= -->
+<div id="springfall-view" class="view">
+  <div class="wrap">
+    <div class="top-row">
+      <button class="back-link" onclick="navigateTo('home-view')">← All services</button>
+      <button class="cart-link" onclick="navigateTo('cart-view')">
+        🛒 Cart <span class="cart-badge" id="cart-badge-sf" style="display:none;"></span>
+      </button>
+    </div>
+    <p class="eyebrow" style="margin-top:24px;">Green seasons</p>
+    <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Spring – Fall</h1>
+    <p class="subtitle">Services you can purchase from the first thaw through the last falling leaf.</p>
+    <ul class="offering-list" id="springfall-offerings"></ul>
+  </div>
+</div>
+
+<!-- ================= WINTER ================= -->
+<div id="winter-view" class="view">
+  <div class="wrap">
+    <div class="top-row">
+      <button class="back-link" onclick="navigateTo('home-view')">← All services</button>
+      <button class="cart-link" onclick="navigateTo('cart-view')">
+        🛒 Cart <span class="cart-badge" id="cart-badge-w" style="display:none;"></span>
+      </button>
+    </div>
+    <p class="eyebrow" style="margin-top:24px;">Cold seasons</p>
+    <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Winter</h1>
+    <p class="subtitle">Services you can purchase to keep your property clear all winter.</p>
+    <ul class="offering-list" id="winter-offerings"></ul>
+  </div>
+</div>
+
+<!-- ================= ABOUT ================= -->
+<div id="about-view" class="view">
+  <div class="wrap">
+    <p class="eyebrow">Meet the team</p>
+    <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.5rem);">About the Creators</h1>
+    <div class="about-photo">[ Creator Photo ]</div>
+    <div class="about-text">
+      <p>Hello, my name is Arjun ObliPrabu. I am a high-school student that has created this app. I was already interested in lawn-mowing and snowplowing, so I decided to turn that into a business, which will work full year round. My goal is to make properties looking cleaner, and make our community beautiful!</p>
+      <p>We take pride in showing up on time, doing the job right, and treating every yard like it's our own.</p>
+      <p>Thanks for trusting us with your property — we can't wait to work with you.</p>
+    </div>
+    <footer class="home-footer">
+      <button class="pill-btn" onclick="navigateTo('home-view')">← Return to Home</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ================= CART ================= -->
+<div id="cart-view" class="view">
+  <div class="wrap">
+    <button class="back-link" onclick="navigateTo('home-view')">← All services</button>
+    <p class="eyebrow" style="margin-top:24px;">Order summary</p>
+    <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Your Cart</h1>
+
+    <div id="cart-empty" class="empty-box" style="display:none;">
+      <p>Your cart is empty. Add a service to get started.</p>
+      <a href="#" onclick="navigateTo('home-view'); return false;">Browse services</a>
+    </div>
+
+    <div id="cart-body" style="margin-top:40px;">
+      <ul class="offering-list" id="cart-items-list" style="margin-top:0;"></ul>
+      <div class="total-row">
+        <span class="label">Total</span>
+        <span class="amount font-display" id="cart-total">$0</span>
+      </div>
+      <footer class="home-footer">
+        <button class="pill-btn" onclick="goToCheckout()">Continue to payment →</button>
+      </footer>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CHECKOUT ================= -->
+<div id="checkout-view" class="view">
+  <div class="wrap-wide">
+    <button class="back-link" onclick="navigateTo('cart-view')">← Back to cart</button>
+    <p class="eyebrow" style="margin-top:24px;">Final step</p>
+    <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Checkout</h1>
+
+    <div id="checkout-empty" class="empty-box" style="display:none;">
+      <p>Nothing to pay for. Your cart is empty.</p>
+      <a href="#" onclick="navigateTo('home-view'); return false;">← Back to services</a>
+    </div>
+
+    <div id="checkout-body" class="checkout-grid">
+      <section class="panel">
+        <h2 class="font-display" style="font-size:1.6rem;margin:0 0 16px 0;">Order recap</h2>
+        <div id="checkout-recap"></div>
+        <div class="recap-total font-display">
+          <span>Total</span>
+          <span id="checkout-total">$0</span>
+        </div>
+      </section>
+
+      <div class="panel" id="checkout-form">
+        <h2 class="font-display" style="font-size:1.6rem;margin:0 0 16px 0;">Payment</h2>
+        <label class="form-label" for="pay-name">Name on card</label>
+        <input class="form-input" id="pay-name" placeholder="Jane Doe">
+        <label class="form-label" for="pay-email">Email</label>
+        <input class="form-input" id="pay-email" type="text" placeholder="you@email.com">
+        <label class="form-label" for="pay-card">Card number</label>
+        <input class="form-input" id="pay-card" placeholder="4242 4242 4242 4242" inputmode="numeric">
+        <div class="form-row2">
+          <div>
+            <label class="form-label" for="pay-exp">Expiry</label>
+            <input class="form-input" id="pay-exp" placeholder="MM/YY">
+          </div>
+          <div>
+            <label class="form-label" for="pay-cvc">CVC</label>
+            <input class="form-input" id="pay-cvc" placeholder="123" inputmode="numeric">
+          </div>
+        </div>
+        <button class="pill-btn full-btn" type="button" id="pay-btn" onclick="handlePay()"><span id="pay-btn-label">Pay</span> <span id="pay-btn-amount">$0</span></button>
+        <p class="fine-print">Demo checkout — no real payment is processed.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CONFIRMATION ================= -->
+<div id="confirmation-view" class="view">
+  <div class="wrap">
+    <div style="text-align:center;">
+      <div class="check-circle">✓</div>
+      <p class="eyebrow" style="margin-top:20px;">Your booking is confirmed</p>
+      <h1 class="big-title font-display">Thank you!</h1>
+      <p class="subtitle">We'll see you on the date(s) below. A receipt has been "sent" to your email.</p>
+    </div>
+
+    <section style="margin-top:50px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Your appointments</h2>
+      <div id="appointments-list"></div>
+    </section>
+
+    <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Booking calendar</h2>
+      <div class="panel" style="display:flex;justify-content:center;">
+        <div style="width:280px;">
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="confCalMonth(-1)">‹</button>
+            <span class="cal-month-label" id="conf-cal-label"></span>
+            <button class="cal-nav-btn" onclick="confCalMonth(1)">›</button>
+          </div>
+          <div class="cal-grid" id="conf-cal-dow"></div>
+          <div class="cal-grid" id="conf-cal-grid" style="margin-top:4px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="home-footer">
+      <button class="pill-btn" onclick="navigateTo('home-view')">← Return to Home</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ================= ADMIN DASHBOARD ================= -->
+<div id="admin-view" class="view">
+  <div class="wrap-wide">
+    <div class="top-row">
+      <button class="back-link" onclick="navigateTo('home-view')">← Back to site</button>
+      <span class="eyebrow" style="margin:0;">Signed in as admin</span>
+    </div>
+    <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Admin Dashboard</h1>
+
+    <section style="margin-top:40px;">
+      <div class="checkout-grid" style="margin-top:0;">
+        <div class="panel" style="text-align:center;">
+          <p class="eyebrow" style="margin:0;">Total bookings</p>
+          <p class="font-display" style="font-size:2.4rem;margin:6px 0 0 0;" id="admin-stat-bookings">0</p>
+        </div>
+        <div class="panel" style="text-align:center;">
+          <p class="eyebrow" style="margin:0;">Total revenue</p>
+          <p class="font-display" style="font-size:2.4rem;margin:6px 0 0 0;" id="admin-stat-revenue">$0</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">All bookings</h2>
+      <div id="admin-bookings-list" style="margin-top:16px;"></div>
+    </section>
+
+    <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Customers</h2>
+      <div id="admin-customers-list" style="margin-top:16px;"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= BOOKING MODAL ================= -->
+<div class="modal-overlay" id="booking-modal" onclick="if(event.target===this) closeBookingModal();">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeBookingModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" id="modal-title">Book Service</h2>
+    <p class="modal-sub">Pick an available date, then choose a time slot.</p>
+
+    <div class="cal-nav">
+      <button class="cal-nav-btn" id="modal-prev-btn" onclick="modalCalMonth(-1)">‹</button>
+      <span class="cal-month-label" id="modal-cal-label"></span>
+      <button class="cal-nav-btn" onclick="modalCalMonth(1)">›</button>
+    </div>
+    <div class="cal-grid" id="modal-cal-dow"></div>
+    <div class="cal-grid" id="modal-cal-grid" style="margin-top:4px;"></div>
+
+    <div id="modal-time-section" style="display:none;">
+      <p style="font-size:0.9rem; margin-top:20px; margin-bottom:0;" id="modal-date-label"></p>
+      <div class="time-grid" id="modal-time-grid"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="pill-btn full-btn" id="modal-confirm-btn" disabled onclick="confirmBooking()">Continue to finalize order</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= SIGN IN / SIGN UP MODAL ================= -->
+<div class="modal-overlay" id="signin-modal" onclick="if(event.target===this) closeSignInModal();">
+  <div class="modal-box" style="max-width:380px;">
+    <button class="modal-close-btn" onclick="closeSignInModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" id="auth-title">Sign In</h2>
+    <p class="modal-sub" id="auth-sub">Enter your email and password to continue.</p>
+
+    <label class="form-label" for="signin-email">Email</label>
+    <input class="form-input" id="signin-email" type="text" placeholder="you@email.com" onkeydown="if(event.key==='Enter'){event.preventDefault();submitAuth();}">
+
+    <label class="form-label" for="signin-password">Password</label>
+    <input class="form-input" id="signin-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){event.preventDefault();submitAuth();}">
+
+    <div id="signup-only-fields" style="display:none;">
+      <label class="form-label" for="signup-street">Street Address</label>
+      <input class="form-input" id="signup-street" type="text" placeholder="123 Main St">
+
+      <label class="form-label" for="signup-city">City</label>
+      <input class="form-input" id="signup-city" type="text" placeholder="Springfield">
+
+      <div class="form-row2">
+        <div>
+          <label class="form-label" for="signup-state">State</label>
+          <input class="form-input" id="signup-state" type="text" placeholder="NJ">
+        </div>
+        <div>
+          <label class="form-label" for="signup-zip">ZIP Code</label>
+          <input class="form-input" id="signup-zip" type="text" placeholder="07890" inputmode="numeric">
+        </div>
+      </div>
+    </div>
+
+    <p id="signin-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
+
+    <button class="pill-btn full-btn" type="button" id="auth-submit-btn" onclick="submitAuth()">Sign In</button>
+
+    <p class="fine-print" style="margin-top:16px;">
+      <span id="auth-toggle-prompt">Don't have an account?</span>
+      <a href="#" onclick="toggleAuthMode(); return false;" id="auth-toggle-link" style="color:var(--foreground);text-decoration:underline;">Sign up</a>
+    </p>
+  </div>
+</div>
+
+<!-- ================= DELETE CUSTOMER CONFIRM MODAL ================= -->
+<div class="modal-overlay" id="delete-customer-modal" onclick="if(event.target===this) closeDeleteCustomerModal();">
+  <div class="modal-box" style="max-width:360px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeDeleteCustomerModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;">Are you sure you want to delete <span id="delete-customer-name"></span>?</h2>
+    <p class="modal-sub">This will permanently remove their account. This can't be undone.</p>
+    <div style="display:flex; gap:12px; margin-top:20px;">
+      <button class="pill-btn full-btn" style="background:var(--secondary); color:var(--foreground);" onclick="closeDeleteCustomerModal()">Cancel</button>
+      <button class="pill-btn full-btn" style="background:#b3261e;" onclick="confirmDeleteCustomer()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CANCEL BOOKING CONFIRM MODAL ================= -->
+<div class="modal-overlay" id="cancel-booking-modal" onclick="if(event.target===this) closeCancelBookingModal();">
+  <div class="modal-box" style="max-width:360px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeCancelBookingModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;">Cancel this booking?</h2>
+    <p class="modal-sub" id="cancel-booking-details"></p>
+    <p class="modal-sub" style="margin-top:8px;">The $<span id="cancel-booking-amount">0</span> will be refunded to the customer, and this slot will open back up.</p>
+    <div style="display:flex; gap:12px; margin-top:20px;">
+      <button class="pill-btn full-btn" style="background:var(--secondary); color:var(--foreground);" onclick="closeCancelBookingModal()">Keep booking</button>
+      <button class="pill-btn full-btn" style="background:#b3261e;" onclick="confirmCancelBooking()">Cancel booking</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+   ============================================================ */
+const SPRING_FALL_OFFERINGS = [
+  { name: "Lawn mowing — back yard", price: 40, priceLabel: "$40 / visit", description: "Precision cut and edged borders for the back yard." },
+  { name: "Lawn mowing — front yard", price: 25, priceLabel: "$25 / visit", description: "Curb-appeal cut and clean edging up front." },
+  { name: "Leaf blowing", price: 30, priceLabel: "$30 / visit", description: "Full yard clearing, beds and walkways included." },
+  { name: "Weed whacking", price: 30, priceLabel: "$30 / visit", description: "Trim along fences, beds and hardscape edges." },
+  { name: "Plant watering", price: 25, priceLabel: "$25 / visit", description: "Scheduled deep watering for beds and containers." },
+  { name: "Seasonal cleanup", price: 200, priceLabel: "$200 / one visit", description: "Full property reset at the start or end of the season." },
+];
+
+const WINTER_OFFERINGS = [
+  { name: "Snow plowing", price: 75, priceLabel: "$75 / visit", description: "Driveway and parking pad cleared after each snowfall." },
+  { name: "Shoveling snow", price: 50, priceLabel: "$50 / visit", description: "Walkways, steps and entryways shoveled clean." },
+  { name: "Car cleaning (snow)", price: 20, priceLabel: "$20 / car", description: "Brush off, windows cleared, wipers freed." },
+  { name: "Seasonal snow plan", price: 200, priceLabel: "$200 / visit", description: "Priority routing on your scheduled plow visits all winter long." },
+];
+
+const TIME_SLOTS = ["12 PM", "4 PM"];
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DOW = ["S","M","T","W","T","F","S"];
+
+const BOOKINGS_KEY = "lc.bookings.v1";
+const CART_KEY = "lc.cart.v1";
+const ACCOUNT_KEY = "lc.currentUser.v1";
+const ACCOUNTS_KEY = "lc.accounts.v1";
+
+// Demo-only admin login. IMPORTANT: this app has no server, so this password
+// lives in plain text in this file's code — anyone who opens the page source
+// or browser dev tools can read it. Never reuse a real/important password
+// here. For a real business you'd eventually move this to a real backend.
+const ADMIN_EMAIL = "arjun.obliprabu@gmail.com";
+const ADMIN_PASSWORD = "Arjun123$";
+
+/* ============================================================
+   ACCOUNTS (sign up / sign in / admin)
+   ============================================================ */
+function getAccounts() { return readStore(ACCOUNTS_KEY, []); }
+function saveAccounts(accounts) { writeStore(ACCOUNTS_KEY, accounts); }
+function findAccount(email) {
+  return getAccounts().find(a => a.email.toLowerCase() === email.toLowerCase()) || null;
+}
+function isAdminEmail(email) {
+  return email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
+function getCurrentUser() {
+  try { return localStorage.getItem(ACCOUNT_KEY); } catch (e) { return null; }
+}
+function isCurrentUserAdmin() {
+  return isAdminEmail(getCurrentUser());
+}
+function setCurrentUser(email) {
+  try { localStorage.setItem(ACCOUNT_KEY, email); } catch (e) {}
+  renderAccountWidget();
+}
+function logoutUser() {
+  try { localStorage.removeItem(ACCOUNT_KEY); } catch (e) {}
+  renderAccountWidget();
+  navigateTo('home-view');
+}
+
+let pendingSignInAction = null;
+let authMode = 'signin'; // 'signin' | 'signup'
+
+function openSignInModal(onSuccess) {
+  pendingSignInAction = onSuccess || null;
+  authMode = 'signin';
+  applyAuthMode();
+  document.getElementById('signin-email').value = '';
+  document.getElementById('signin-password').value = '';
+  document.getElementById('signup-street').value = '';
+  document.getElementById('signup-city').value = '';
+  document.getElementById('signup-state').value = '';
+  document.getElementById('signup-zip').value = '';
+  document.getElementById('signin-error').style.display = 'none';
+  document.getElementById('signin-modal').classList.add('active');
+}
+function closeSignInModal() {
+  document.getElementById('signin-modal').classList.remove('active');
+  pendingSignInAction = null;
+}
+function toggleAuthMode() {
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  document.getElementById('signin-error').style.display = 'none';
+  applyAuthMode();
+}
+function applyAuthMode() {
+  const isSignup = authMode === 'signup';
+  document.getElementById('auth-title').innerText = isSignup ? 'Sign Up' : 'Sign In';
+  document.getElementById('auth-sub').innerText = isSignup
+    ? 'Create an account with an email and password.'
+    : 'Enter your email and password to continue.';
+  document.getElementById('signup-only-fields').style.display = isSignup ? 'block' : 'none';
+  document.getElementById('auth-submit-btn').innerText = isSignup ? 'Create Account' : 'Sign In';
+  document.getElementById('auth-toggle-prompt').innerText = isSignup ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('auth-toggle-link').innerText = isSignup ? 'Sign in' : 'Sign up';
+}
+
+function submitAuth() {
+  if (authMode === 'signup') {
+    submitSignUp();
+  } else {
+    submitSignIn();
+  }
+}
+
+function showAuthError(message) {
+  const errorEl = document.getElementById('signin-error');
+  errorEl.innerText = message;
+  errorEl.style.display = 'block';
+}
+
+function submitSignIn() {
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    showAuthError("Please enter a valid email.");
+    return;
+  }
+  if (!password) {
+    showAuthError("Please enter your password.");
+    return;
+  }
+
+  // Admin login
+  if (isAdminEmail(email)) {
+    if (password !== ADMIN_PASSWORD) {
+      showAuthError("Incorrect admin password.");
+      return;
+    }
+    finishSignIn(email);
+    return;
+  }
+
+  // Regular customer login
+  const account = findAccount(email);
+  if (!account) {
+    showAuthError("No account found with that email — please sign up first.");
+    return;
+  }
+  if (account.password !== password) {
+    showAuthError("Incorrect password.");
+    return;
+  }
+  finishSignIn(email);
+}
+
+function submitSignUp() {
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+  const street = document.getElementById('signup-street').value.trim();
+  const city = document.getElementById('signup-city').value.trim();
+  const state = document.getElementById('signup-state').value.trim();
+  const zip = document.getElementById('signup-zip').value.trim();
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    showAuthError("Please enter a valid email.");
+    return;
+  }
+  if (isAdminEmail(email)) {
+    showAuthError("That email is reserved. Please use a different one.");
+    return;
+  }
+  if (!password || password.length < 6) {
+    showAuthError("Please choose a password that's at least 6 characters.");
+    return;
+  }
+  if (findAccount(email)) {
+    showAuthError("An account with that email already exists — try signing in instead.");
+    return;
+  }
+  if (!street) {
+    showAuthError("Please enter your street address.");
+    return;
+  }
+  if (!city) {
+    showAuthError("Please enter your city.");
+    return;
+  }
+  if (!state) {
+    showAuthError("Please enter your state.");
+    return;
+  }
+  if (!zip) {
+    showAuthError("Please enter your ZIP code.");
+    return;
+  }
+
+  const accounts = getAccounts();
+  accounts.push({ email, password, address: { street, city, state, zip } });
+  saveAccounts(accounts);
+  finishSignIn(email);
+}
+
+function finishSignIn(email) {
+  setCurrentUser(email);
+  document.getElementById('signin-modal').classList.remove('active');
+  const action = pendingSignInAction;
+  pendingSignInAction = null;
+  if (isAdminEmail(email)) {
+    renderAdminDashboard();
+    navigateTo('admin-view');
+  } else if (action) {
+    action();
+  }
+}
+
+function renderAccountWidget() {
+  const el = document.getElementById('account-widget');
+  const email = getCurrentUser();
+  if (email) {
+    const initial = email.trim()[0].toUpperCase();
+    const admin = isAdminEmail(email);
+    el.innerHTML = `
+      <span class="account-avatar">${initial}</span>
+      <span>${admin ? 'Admin' : email}</span>
+      ${admin ? `<button onclick="renderAdminDashboard(); navigateTo('admin-view');" style="text-decoration:underline;">Dashboard</button>` : ''}
+      <button class="logout-link" onclick="logoutUser()">Log out</button>
+    `;
+  } else {
+    el.innerHTML = `<button onclick="openSignInModal()">👤 Sign in</button>`;
+  }
+}
+
+/* ============================================================
+   STORAGE HELPERS
+   ============================================================ */
+function readStore(key, fallback) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch (e) { return fallback; }
+}
+function writeStore(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); }
+  catch (e) { console.warn("Could not save to this device.", e); }
+}
+function getBookings() { return readStore(BOOKINGS_KEY, []); }
+function getCart() { return readStore(CART_KEY, []); }
+
+// A slot only counts as "Booked" once a purchase has actually gone through
+// (i.e. it's in the confirmed bookings list) — sitting in someone's cart
+// does not reserve it. Among confirmed bookings, it's only "taken" for a
+// customer if it belongs to a DIFFERENT email; the same signed-in customer
+// can stack multiple services onto their own already-booked day + time.
+function isSlotTakenByOther(dateISO, time, email) {
+  return getBookings().some(b => b.dateISO === dateISO && b.time === time && b.email !== email);
+}
+function customerAlreadyHasSlot(dateISO, time, email) {
+  return getBookings().some(b => b.dateISO === dateISO && b.time === time && b.email === email);
+}
+function addToCart(item) {
+  const cart = getCart();
+  const id = `${item.dateISO}-${item.time}-${Date.now()}`;
+  cart.push({ ...item, id, email: getCurrentUser() });
+  writeStore(CART_KEY, cart);
+}
+function removeFromCart(id) {
+  writeStore(CART_KEY, getCart().filter(c => c.id !== id));
+  renderCart();
+}
+function confirmCartAsBookings() {
+  const email = getCurrentUser();
+  const cart = getCart();
+  const mine = cart.filter(c => c.email === email);
+  const others = cart.filter(c => c.email !== email);
+  const bookings = getBookings();
+  const newBookings = mine.map(item => ({ ...item })); // keep the id so it can be cancelled later
+  writeStore(BOOKINGS_KEY, [...bookings, ...newBookings]);
+  writeStore(CART_KEY, others);
+  return newBookings;
+}
+function formatDateISO(y, m, d) {
+  return `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+}
+function prettyDate(iso) {
+  const [y,m,d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function navigateTo(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  refreshCartBadges();
+  window.scrollTo(0,0);
+}
+
+function refreshCartBadges() {
+  const email = getCurrentUser();
+  const count = getCart().filter(c => c.email === email).length;
+  [ "cart-badge-sf", "cart-badge-w" ].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (count > 0) { el.style.display = 'inline-block'; el.innerText = count; }
+    else { el.style.display = 'none'; }
+  });
+}
+
+/* ============================================================
+   RENDER OFFERING LISTS
+   ============================================================ */
+function renderOfferings(listId, offerings, accentClass) {
+  const ul = document.getElementById(listId);
+  ul.innerHTML = '';
+  offerings.forEach((o, idx) => {
+    const li = document.createElement('li');
+    li.className = `offering ${accentClass}`;
+    li.innerHTML = `
+      <div>
+        <h2 class="font-display">${o.name}</h2>
+        <p>${o.description}</p>
+      </div>
+      <div class="price-col">
+        <p>${o.priceLabel}</p>
+        <button class="add-btn" onclick="openBookingModal('${listId}', ${idx})">Add</button>
+      </div>
+    `;
+    ul.appendChild(li);
+  });
+}
+
+/* ============================================================
+   BOOKING MODAL
+   ============================================================ */
+let activeOffering = null;
+let modalYear, modalMonth, modalDay = null, modalTime = null;
+const todayReal = new Date();
+
+function offeringFromSource(listId, idx) {
+  return listId === 'springfall-offerings' ? SPRING_FALL_OFFERINGS[idx] : WINTER_OFFERINGS[idx];
+}
+
+function openBookingModal(listId, idx) {
+  if (!getCurrentUser()) {
+    openSignInModal(() => openBookingModalActual(listId, idx));
+    return;
+  }
+  openBookingModalActual(listId, idx);
+}
+
+function openBookingModalActual(listId, idx) {
+  activeOffering = offeringFromSource(listId, idx);
+  document.getElementById('modal-title').innerText = `Book ${activeOffering.name}`;
+  modalYear = todayReal.getFullYear();
+  modalMonth = todayReal.getMonth();
+  modalDay = null;
+  modalTime = null;
+  document.getElementById('modal-time-section').style.display = 'none';
+  document.getElementById('modal-confirm-btn').disabled = true;
+  buildDowRow('modal-cal-dow');
+  renderModalCalendar();
+  document.getElementById('booking-modal').classList.add('active');
+}
+
+function closeBookingModal() {
+  document.getElementById('booking-modal').classList.remove('active');
+}
+
+function buildDowRow(containerId) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = DOW.map(d => `<div class="cal-dow">${d}</div>`).join('');
+}
+
+function modalCalMonth(direction) {
+  modalMonth += direction;
+  if (modalMonth < 0) { modalMonth = 11; modalYear--; }
+  if (modalMonth > 11) { modalMonth = 0; modalYear++; }
+  modalDay = null; modalTime = null;
+  document.getElementById('modal-time-section').style.display = 'none';
+  document.getElementById('modal-confirm-btn').disabled = true;
+  renderModalCalendar();
+}
+
+function renderModalCalendar() {
+  document.getElementById('modal-cal-label').innerText = `${MONTH_NAMES[modalMonth]} ${modalYear}`;
+  const isCurrentMonth = (modalYear === todayReal.getFullYear() && modalMonth === todayReal.getMonth());
+  document.getElementById('modal-prev-btn').disabled = isCurrentMonth;
+
+  const grid = document.getElementById('modal-cal-grid');
+  grid.innerHTML = '';
+  const firstWeekday = new Date(modalYear, modalMonth, 1).getDay();
+  const daysInMonth = new Date(modalYear, modalMonth + 1, 0).getDate();
+
+  for (let p = 0; p < firstWeekday; p++) {
+    const pad = document.createElement('div');
+    pad.className = 'cal-day pad';
+    grid.appendChild(pad);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement('div');
+    cell.className = 'cal-day';
+    cell.innerText = day;
+    const isPast = isCurrentMonth && day < todayReal.getDate();
+    if (isPast) {
+      cell.classList.add('disabled');
+    } else {
+      cell.onclick = () => selectModalDay(day, cell);
+    }
+    grid.appendChild(cell);
+  }
+}
+
+function selectModalDay(day, cell) {
+  document.querySelectorAll('#modal-cal-grid .cal-day').forEach(c => c.classList.remove('selected'));
+  cell.classList.add('selected');
+  modalDay = day;
+  modalTime = null;
+
+  const dateISO = formatDateISO(modalYear, modalMonth, day);
+  document.getElementById('modal-date-label').innerText = prettyDate(dateISO);
+  document.getElementById('modal-time-section').style.display = 'block';
+  document.getElementById('modal-confirm-btn').disabled = true;
+
+  const timeGrid = document.getElementById('modal-time-grid');
+  timeGrid.innerHTML = '';
+  const email = getCurrentUser();
+  TIME_SLOTS.forEach(slot => {
+    const takenByOther = isSlotTakenByOther(dateISO, slot, email);
+    const isMine = customerAlreadyHasSlot(dateISO, slot, email);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'time-slot-btn' + (takenByOther ? ' taken' : '');
+    btn.innerHTML = slot +
+      (takenByOther ? '<span class="time-slot-taken-label">Booked</span>' : '') +
+      (!takenByOther && isMine ? '<span class="time-slot-taken-label">Your slot — add another</span>' : '');
+    if (!takenByOther) {
+      btn.onclick = () => selectModalTime(slot, btn);
+    } else {
+      btn.disabled = true;
+    }
+    timeGrid.appendChild(btn);
+  });
+}
+
+function selectModalTime(slot, btn) {
+  document.querySelectorAll('#modal-time-grid .time-slot-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  modalTime = slot;
+  document.getElementById('modal-confirm-btn').disabled = false;
+}
+
+function confirmBooking() {
+  if (!activeOffering || modalDay === null || !modalTime) return;
+  const dateISO = formatDateISO(modalYear, modalMonth, modalDay);
+  addToCart({
+    dateISO,
+    time: modalTime,
+    serviceName: activeOffering.name,
+    price: activeOffering.price
+  });
+  closeBookingModal();
+  refreshCartBadges();
+  showToast(`Added ${activeOffering.name} — ${prettyDate(dateISO)} · ${modalTime}`);
+}
+
+function showToast(message) {
+  let toast = document.getElementById('app-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'app-toast';
+    toast.className = 'app-toast';
+    document.body.appendChild(toast);
+  }
+  toast.innerText = message;
+  toast.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => toast.classList.remove('show'), 2600);
+}
+
+/* ============================================================
+   CART PAGE
+   ============================================================ */
+function renderCart() {
+  const email = getCurrentUser();
+  const cart = getCart().filter(c => c.email === email);
+  const emptyEl = document.getElementById('cart-empty');
+  const bodyEl = document.getElementById('cart-body');
+
+  if (cart.length === 0) {
+    emptyEl.style.display = 'block';
+    bodyEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  bodyEl.style.display = 'block';
+
+  const list = document.getElementById('cart-items-list');
+  list.innerHTML = '';
+  let total = 0;
+  cart.forEach(item => {
+    total += item.price;
+    const li = document.createElement('li');
+    li.className = 'cart-item-row';
+    li.innerHTML = `
+      <div>
+        <h2 class="font-display">${item.serviceName}</h2>
+        <p class="meta">${prettyDate(item.dateISO)} · ${item.time}</p>
+      </div>
+      <div class="price-col">
+        <p style="margin:0;font-weight:500;">$${item.price}</p>
+        <button class="remove-btn" onclick="removeFromCart('${item.id}')">Remove</button>
+      </div>
+    `;
+    list.appendChild(li);
+  });
+  document.getElementById('cart-total').innerText = `$${total}`;
+}
+
+/* ============================================================
+   CHECKOUT PAGE
+   ============================================================ */
+function goToCheckout() {
+  navigateTo('checkout-view');
+  renderCheckout();
+}
+
+function renderCheckout() {
+  const email = getCurrentUser();
+  const cart = getCart().filter(c => c.email === email);
+  const emptyEl = document.getElementById('checkout-empty');
+  const bodyEl = document.getElementById('checkout-body');
+
+  if (cart.length === 0) {
+    emptyEl.style.display = 'block';
+    bodyEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  bodyEl.style.display = 'grid';
+
+  const recap = document.getElementById('checkout-recap');
+  recap.innerHTML = '';
+  let total = 0;
+  cart.forEach(item => {
+    total += item.price;
+    const row = document.createElement('div');
+    row.className = 'recap-row';
+    row.innerHTML = `
+      <div>
+        <p style="margin:0;font-weight:500;">${item.serviceName}</p>
+        <p class="meta" style="margin:2px 0 0 0;">${prettyDate(item.dateISO)} · ${item.time}</p>
+      </div>
+      <span>$${item.price}</span>
+    `;
+    recap.appendChild(row);
+  });
+  document.getElementById('checkout-total').innerText = `$${total}`;
+  document.getElementById('pay-btn-amount').innerText = `$${total}`;
+}
+
+function handlePay() {
+  const btn = document.getElementById('pay-btn');
+  const label = document.getElementById('pay-btn-label');
+  btn.disabled = true;
+  label.innerText = 'Processing…';
+  setTimeout(() => {
+    confirmCartAsBookings();
+    btn.disabled = false;
+    label.innerText = 'Pay';
+    renderConfirmation();
+    navigateTo('confirmation-view');
+    showToast('Payment successful — booking confirmed!');
+  }, 600);
+}
+
+/* ============================================================
+   CONFIRMATION PAGE
+   ============================================================ */
+let confYear, confMonth;
+
+function renderConfirmation() {
+  const email = getCurrentUser();
+  const bookings = getBookings().filter(b => b.email === email);
+  const list = document.getElementById('appointments-list');
+  list.innerHTML = '';
+  bookings.forEach(b => {
+    const row = document.createElement('div');
+    row.className = 'appt-row';
+    row.innerHTML = `
+      <div>
+        <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+        <p class="meta">${prettyDate(b.dateISO)} · ${b.time}</p>
+      </div>
+      <span style="font-weight:500;">$${b.price}</span>
+    `;
+    list.appendChild(row);
+  });
+
+  confYear = todayReal.getFullYear();
+  confMonth = todayReal.getMonth();
+  buildDowRow('conf-cal-dow');
+  renderConfCalendar();
+}
+
+function confCalMonth(direction) {
+  confMonth += direction;
+  if (confMonth < 0) { confMonth = 11; confYear--; }
+  if (confMonth > 11) { confMonth = 0; confYear++; }
+  renderConfCalendar();
+}
+
+function renderConfCalendar() {
+  document.getElementById('conf-cal-label').innerText = `${MONTH_NAMES[confMonth]} ${confYear}`;
+  const grid = document.getElementById('conf-cal-grid');
+  grid.innerHTML = '';
+
+  const bookedDates = new Set(getBookings().map(b => b.dateISO));
+  const firstWeekday = new Date(confYear, confMonth, 1).getDay();
+  const daysInMonth = new Date(confYear, confMonth + 1, 0).getDate();
+
+  for (let p = 0; p < firstWeekday; p++) {
+    const pad = document.createElement('div');
+    pad.className = 'cal-day pad';
+    grid.appendChild(pad);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const cell = document.createElement('div');
+    const dateISO = formatDateISO(confYear, confMonth, day);
+    cell.className = 'cal-day' + (bookedDates.has(dateISO) ? ' booked-marker' : '');
+    cell.innerText = day;
+    grid.appendChild(cell);
+  }
+}
+
+/* ============================================================
+   ADMIN DASHBOARD
+   ============================================================ */
+// Bookings created before the Cancel feature existed don't have a unique id,
+// which the Cancel button needs to find the right one. This patches any
+// old bookings the first time the dashboard loads, so Cancel works on them too.
+function ensureBookingIds() {
+  const bookings = getBookings();
+  let changed = false;
+  const patched = bookings.map((b, idx) => {
+    if (!b.id) {
+      changed = true;
+      return { ...b, id: `legacy-${idx}-${b.dateISO}-${b.time}-${Date.now()}` };
+    }
+    return b;
+  });
+  if (changed) writeStore(BOOKINGS_KEY, patched);
+}
+
+function renderAdminDashboard() {
+  ensureBookingIds();
+  const bookings = getBookings().slice().sort((a, b) => (a.dateISO + a.time).localeCompare(b.dateISO + b.time));
+  const accounts = getAccounts();
+
+  document.getElementById('admin-stat-bookings').innerText = bookings.length;
+  const revenue = bookings.reduce((sum, b) => sum + b.price, 0);
+  document.getElementById('admin-stat-revenue').innerText = `$${revenue}`;
+
+  const bookingsList = document.getElementById('admin-bookings-list');
+  if (bookings.length === 0) {
+    bookingsList.innerHTML = '<p style="color:var(--muted-foreground);">No bookings yet.</p>';
+  } else {
+    bookingsList.innerHTML = bookings.map(b => `
+      <div class="appt-row">
+        <div>
+          <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}</p>
+        </div>
+        <div style="text-align:right;">
+          <p style="font-weight:500;margin:0 0 6px 0;">$${b.price}</p>
+          <button class="remove-btn" onclick="openCancelBookingModal('${b.id}')">Cancel</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  const customersList = document.getElementById('admin-customers-list');
+  // Only customers who've actually completed a purchase show up here —
+  // signing up alone doesn't put someone on this list yet.
+  const payingEmails = new Set(bookings.map(b => b.email));
+  const payingAccounts = accounts.filter(a => payingEmails.has(a.email));
+
+  if (payingAccounts.length === 0) {
+    customersList.innerHTML = '<p style="color:var(--muted-foreground);">No paying customers yet.</p>';
+  } else {
+    customersList.innerHTML = payingAccounts.map(a => {
+      const addr = a.address
+        ? `${a.address.street}, ${a.address.city}, ${a.address.state} ${a.address.zip}`
+        : 'No address on file';
+      return `
+      <div class="appt-row">
+        <div>
+          <p style="margin:0;font-weight:500;">${a.email}</p>
+          <p class="meta">${addr}</p>
+        </div>
+        <button class="remove-btn" onclick="openDeleteCustomerModal('${a.email.replace(/'/g, "\\'")}')">Remove</button>
+      </div>
+    `;
+    }).join('');
+  }
+}
+
+let pendingDeleteEmail = null;
+
+function openDeleteCustomerModal(email) {
+  pendingDeleteEmail = email;
+  document.getElementById('delete-customer-name').innerText = email;
+  document.getElementById('delete-customer-modal').classList.add('active');
+}
+
+function closeDeleteCustomerModal() {
+  document.getElementById('delete-customer-modal').classList.remove('active');
+  pendingDeleteEmail = null;
+}
+
+function confirmDeleteCustomer() {
+  if (!pendingDeleteEmail) return;
+  const email = pendingDeleteEmail;
+  const accounts = getAccounts().filter(a => a.email.toLowerCase() !== email.toLowerCase());
+  saveAccounts(accounts);
+  closeDeleteCustomerModal();
+  renderAdminDashboard();
+  showToast(`Removed account: ${email}`);
+}
+
+let pendingCancelBookingId = null;
+
+function openCancelBookingModal(bookingId) {
+  const booking = getBookings().find(b => b.id === bookingId);
+  if (!booking) return;
+  pendingCancelBookingId = bookingId;
+  document.getElementById('cancel-booking-details').innerText =
+    `${booking.serviceName} — ${prettyDate(booking.dateISO)} · ${booking.time} (booked by ${booking.email})`;
+  document.getElementById('cancel-booking-amount').innerText = booking.price;
+  document.getElementById('cancel-booking-modal').classList.add('active');
+}
+
+function closeCancelBookingModal() {
+  document.getElementById('cancel-booking-modal').classList.remove('active');
+  pendingCancelBookingId = null;
+}
+
+function confirmCancelBooking() {
+  if (!pendingCancelBookingId) return;
+  const booking = getBookings().find(b => b.id === pendingCancelBookingId);
+  if (!booking) { closeCancelBookingModal(); return; }
+
+  const remaining = getBookings().filter(b => b.id !== pendingCancelBookingId);
+  writeStore(BOOKINGS_KEY, remaining);
+
+  closeCancelBookingModal();
+  renderAdminDashboard();
+  showToast(`Booking cancelled — $${booking.price} refunded to ${booking.email}`);
+}
+
+/* ============================================================
+   LIGHT / DARK MODE
+   ============================================================ */
+const THEME_KEY = "lc.theme.v1";
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('theme-toggle-btn').innerText = theme === 'dark' ? '☀️' : '🌙';
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
+}
+
+function initTheme() {
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+  if (saved === 'dark' || saved === 'light') {
+    applyTheme(saved);
+  } else {
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDark ? 'dark' : 'light');
+  }
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeBookingModal();
+});
+initTheme();
+renderAccountWidget();
+renderOfferings('springfall-offerings', SPRING_FALL_OFFERINGS, 'warm');
+renderOfferings('winter-offerings', WINTER_OFFERINGS, 'cool');
+refreshCartBadges();
+
+// Re-render cart/checkout whenever those views are shown
+const origNavigateTo = navigateTo;
+navigateTo = function(viewId) {
+  origNavigateTo(viewId);
+  if (viewId === 'cart-view') renderCart();
+  if (viewId === 'confirmation-view') renderConfirmation();
+};
+</script>
+</body>
+</html>
