@@ -818,7 +818,14 @@
       <span class="eyebrow" style="margin:0;">Signed in as service provider</span>
     </div>
     <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Hi, <span id="employee-dashboard-name"></span></h1>
-    <p class="subtitle" style="max-width:520px;">Request open jobs, then check back here to see what you've been approved for.</p>
+    <p class="subtitle" style="max-width:520px;">Request open jobs, then check back here to see what you've been approved for. You keep 65% of every job you complete.</p>
+
+    <section style="margin-top:40px;">
+      <div class="panel" style="text-align:center;max-width:260px;margin:0 auto;">
+        <p class="eyebrow" style="margin:0;">Total earned</p>
+        <p class="font-display" style="font-size:2.4rem;margin:6px 0 0 0;" id="employee-total-earned">$0.00</p>
+      </div>
+    </section>
 
     <section style="margin-top:40px;">
       <h2 class="font-display" style="font-size:1.6rem;">Open job requests</h2>
@@ -877,6 +884,9 @@
       <input class="form-input" id="provider-first-name" type="text" placeholder="Sam">
       <label class="form-label" for="provider-last-name">Last name</label>
       <input class="form-input" id="provider-last-name" type="text" placeholder="Rivera">
+      <label class="form-label" for="provider-venmo">Venmo username</label>
+      <input class="form-input" id="provider-venmo" type="text" placeholder="@sam-rivera">
+      <p class="signin-note" style="margin-top:-8px;">This is how you'll get paid your share of each job.</p>
     </div>
 
     <div id="signup-only-fields" style="display:none;">
@@ -967,6 +977,17 @@
   </div>
 </div>
 
+<!-- ================= VENMO PAYMENT REMINDER MODAL ================= -->
+<div class="modal-overlay" id="venmo-reminder-modal" onclick="if(event.target===this) closeVenmoReminderModal();">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeVenmoReminderModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;">Job Assigned — Time to Pay</h2>
+    <p class="modal-sub" id="venmo-reminder-text" style="text-align:left;"></p>
+    <p class="signin-note" style="margin-top:12px;">This app can't move real money — you'll need to send this yourself in the Venmo app.</p>
+    <button class="pill-btn full-btn" type="button" onclick="closeVenmoReminderModal()" style="margin-top:8px;">Got it</button>
+  </div>
+</div>
+
 <!-- ================= EMPLOYEE SET PASSWORD (INVITE ACCEPT) MODAL ================= -->
 <div class="modal-overlay" id="employee-setup-modal">
   <div class="modal-box" style="max-width:380px;">
@@ -975,6 +996,10 @@
 
     <label class="form-label" for="employee-setup-password">Choose a password</label>
     <input class="form-input" id="employee-setup-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){event.preventDefault();submitEmployeeSetup();}">
+
+    <label class="form-label" for="employee-setup-venmo">Venmo username</label>
+    <input class="form-input" id="employee-setup-venmo" type="text" placeholder="@sam-rivera">
+    <p class="signin-note" style="margin-top:-8px;">This is how you'll get paid your share of each job.</p>
 
     <p id="employee-setup-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
 
@@ -1035,6 +1060,15 @@ function generateInviteToken() {
   return 'inv_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+// Revenue split once a job is assigned to a service provider: they get 65%,
+// the admin keeps 35%. Rounded to the cent.
+const PROVIDER_SHARE = 0.65;
+function splitJobPrice(price) {
+  const providerCut = Math.round(price * PROVIDER_SHARE * 100) / 100;
+  const adminCut = Math.round((price - providerCut) * 100) / 100;
+  return { providerCut, adminCut };
+}
+
 /* ============================================================
    ACCOUNTS (sign up / sign in / admin)
    ============================================================ */
@@ -1090,6 +1124,7 @@ function openSignInModal(onSuccess, role) {
   document.getElementById('signup-zip').value = '';
   document.getElementById('provider-first-name').value = '';
   document.getElementById('provider-last-name').value = '';
+  document.getElementById('provider-venmo').value = '';
   document.getElementById('signin-error').style.display = 'none';
   document.getElementById('signin-modal').classList.add('active');
 }
@@ -1248,6 +1283,7 @@ function submitProviderSignUp() {
   const lastName = document.getElementById('provider-last-name').value.trim();
   const email = document.getElementById('signin-email').value.trim();
   const password = document.getElementById('signin-password').value;
+  let venmo = document.getElementById('provider-venmo').value.trim();
 
   if (!firstName || !lastName) {
     showAuthError("Please enter both a first and last name.");
@@ -1273,10 +1309,15 @@ function submitProviderSignUp() {
     showAuthError("Please choose a password that's at least 6 characters.");
     return;
   }
+  if (!venmo) {
+    showAuthError("Please enter your Venmo username so you can get paid.");
+    return;
+  }
+  if (!venmo.startsWith('@')) venmo = '@' + venmo;
 
   const employees = getEmployees();
   employees.push({
-    firstName, lastName, email,
+    firstName, lastName, email, venmo,
     status: 'awaiting_approval',
     inviteToken: generateInviteToken(),
     password
@@ -1884,7 +1925,17 @@ function acceptJobRequest(bookingId, providerEmail) {
   booking.jobRequests = []; // job is taken, clear remaining requests
   writeStore(BOOKINGS_KEY, bookings);
   renderAdminDashboard();
-  showToast(`Assigned to ${providerEmail}`);
+
+  const emp = findEmployee(providerEmail);
+  const { providerCut } = splitJobPrice(booking.price);
+  document.getElementById('venmo-reminder-text').innerHTML =
+    `<strong>${emp ? emp.firstName + ' ' + emp.lastName : providerEmail}</strong> is assigned to <strong>${booking.serviceName}</strong> (${prettyDate(booking.dateISO)} · ${booking.time}).<br><br>
+     Their share is <strong>$${providerCut.toFixed(2)}</strong> (65% of $${booking.price}).<br><br>
+     Send it yourself via Venmo to: <strong>${emp && emp.venmo ? emp.venmo : 'no Venmo on file'}</strong>`;
+  document.getElementById('venmo-reminder-modal').classList.add('active');
+}
+function closeVenmoReminderModal() {
+  document.getElementById('venmo-reminder-modal').classList.remove('active');
 }
 
 function declineJobRequest(bookingId, providerEmail) {
@@ -1918,11 +1969,13 @@ function renderAdminEmployeesList() {
     let statusLabel = 'Active';
     if (e.status === 'pending') statusLabel = 'Invite pending';
     if (e.status === 'awaiting_approval') statusLabel = 'Awaiting your approval';
+    const venmoLine = e.venmo ? `Venmo: ${e.venmo}` : 'No Venmo on file yet';
     return `
     <div class="appt-row">
       <div>
         <p style="margin:0;font-weight:500;">${e.firstName} ${e.lastName}</p>
         <p class="meta">${e.email} — ${statusLabel}</p>
+        <p class="meta">${venmoLine}</p>
       </div>
       <div style="text-align:right;display:flex;gap:8px;align-items:center;">
         ${e.status === 'pending' ? `<button class="add-btn" onclick="showInviteLink('${e.email.replace(/'/g, "\\'")}')">Copy Invite Link</button>` : ''}
@@ -2031,18 +2084,27 @@ function checkForInviteInUrl() {
   pendingInviteToken = token;
   document.getElementById('employee-setup-name').innerText = emp.firstName;
   document.getElementById('employee-setup-password').value = '';
+  document.getElementById('employee-setup-venmo').value = '';
   document.getElementById('employee-setup-error').style.display = 'none';
   document.getElementById('employee-setup-modal').classList.add('active');
 }
 
 function submitEmployeeSetup() {
   const password = document.getElementById('employee-setup-password').value;
+  let venmo = document.getElementById('employee-setup-venmo').value.trim();
   const errorEl = document.getElementById('employee-setup-error');
   if (!password || password.length < 6) {
     errorEl.innerText = "Please choose a password that's at least 6 characters.";
     errorEl.style.display = 'block';
     return;
   }
+  if (!venmo) {
+    errorEl.innerText = "Please enter your Venmo username so you can get paid.";
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (!venmo.startsWith('@')) venmo = '@' + venmo;
+
   const employees = getEmployees();
   const emp = employees.find(e => e.inviteToken === pendingInviteToken);
   if (!emp) {
@@ -2052,6 +2114,7 @@ function submitEmployeeSetup() {
   }
   emp.status = 'active';
   emp.password = password;
+  emp.venmo = venmo;
   saveEmployees(employees);
 
   document.getElementById('employee-setup-modal').classList.remove('active');
@@ -2077,11 +2140,12 @@ function renderEmployeeDashboard() {
   } else {
     openList.innerHTML = openJobs.map(b => {
       const alreadyRequested = (b.jobRequests || []).includes(email);
+      const { providerCut } = splitJobPrice(b.price);
       return `
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you'd earn $${providerCut.toFixed(2)} (65% of $${b.price})</p>
         </div>
         ${alreadyRequested
           ? `<span class="meta" style="font-weight:600;">Requested — awaiting approval</span>`
@@ -2098,16 +2162,25 @@ function renderEmployeeDashboard() {
   if (myJobs.length === 0) {
     myList.innerHTML = '<p style="color:var(--muted-foreground);">No active jobs yet.</p>';
   } else {
-    myList.innerHTML = myJobs.map(b => `
+    myList.innerHTML = myJobs.map(b => {
+      const { providerCut } = splitJobPrice(b.price);
+      return `
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you earn $${providerCut.toFixed(2)} (65% of $${b.price})</p>
         </div>
         <button class="add-btn" onclick="markJobComplete('${b.id}')">Mark Completed</button>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
+
+  // Total actually earned from jobs marked completed.
+  const completedJobs = bookings.filter(b => b.assignedProviderEmail === email && b.completed);
+  const totalEarned = completedJobs.reduce((sum, b) => sum + splitJobPrice(b.price).providerCut, 0);
+  const totalEl = document.getElementById('employee-total-earned');
+  if (totalEl) totalEl.innerText = `$${totalEarned.toFixed(2)}`;
 }
 
 function requestJob(bookingId) {
