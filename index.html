@@ -990,15 +990,17 @@
         </div>
 
         <p style="color:var(--muted-foreground);font-size:0.9rem;line-height:1.5;">
-          Click below to securely enter your card details on Stripe's own checkout page. You'll be brought back here automatically once payment is complete.
+          Choose how you'd like to pay. You'll be brought back here automatically once payment is complete.
         </p>
         <div id="checkout-multi-warning" style="display:none;background:#fdecea;border:1px solid #f3b9b0;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#8a2f24;font-size:0.85rem;">
           Only one service can be paid for at a time right now. Please go back to your cart and remove all but one item before continuing.
         </div>
-        <button class="pill-btn full-btn" type="button" id="pay-btn" onclick="handlePay()"><span id="pay-btn-label">Pay</span> <span id="pay-btn-amount">$0</span></button>
-        <button class="pill-btn full-btn" type="button" style="background:#3D95CE;margin-top:10px;" onclick="openVenmoPayModal()">Pay with Venmo?</button>
-        <p class="fine-print">You'll be taken to Stripe's secure checkout to complete payment (test mode).</p>
+        <button class="pill-btn full-btn" type="button" id="pay-btn" onclick="handlePay()">Continue with Stripe — <span id="pay-btn-amount">$0</span></button>
+        <p class="fine-print" style="margin-top:6px;">Also accepts Cash App Pay, Apple Pay, and Klarna, if enabled.</p>
+        <button class="pill-btn full-btn" type="button" style="background:#3D95CE;margin-top:14px;" onclick="openVenmoPayModal()">Continue with Venmo</button>
+        <p class="fine-print">You'll be taken to Stripe's secure checkout to complete card payment (test mode).</p>
       </div>
+    </div>
     </div>
   </div>
 </div>
@@ -1202,6 +1204,11 @@
 
     <p id="signin-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
 
+    <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-bottom:16px;cursor:pointer;">
+      <input type="checkbox" id="remember-me-checkbox" checked style="width:16px;height:16px;">
+      Remember me on this device
+    </label>
+
     <button class="pill-btn full-btn" type="button" id="auth-submit-btn" onclick="submitAuth()">Sign In</button>
 
     <p class="fine-print" style="margin-top:16px;">
@@ -1313,6 +1320,11 @@
     <p class="signin-note" style="margin-top:-8px;">This is how you'll get paid your share of each job.</p>
 
     <p id="employee-setup-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
+
+    <label style="display:flex;align-items:center;gap:8px;font-size:0.85rem;margin-bottom:16px;cursor:pointer;">
+      <input type="checkbox" id="employee-setup-remember" checked style="width:16px;height:16px;">
+      Remember me on this device
+    </label>
 
     <button class="pill-btn full-btn" type="button" onclick="submitEmployeeSetup()">Finish Setting Up My Account</button>
   </div>
@@ -1441,17 +1453,32 @@ function isAdminEmail(email) {
 }
 
 function getCurrentUser() {
-  try { return localStorage.getItem(ACCOUNT_KEY); } catch (e) { return null; }
+  try {
+    // sessionStorage (not remembered) takes priority if present, since it
+    // reflects the most recent explicit choice on this device.
+    return sessionStorage.getItem(ACCOUNT_KEY) || localStorage.getItem(ACCOUNT_KEY);
+  } catch (e) { return null; }
 }
 function isCurrentUserAdmin() {
   return isAdminEmail(getCurrentUser());
 }
-function setCurrentUser(email) {
-  try { localStorage.setItem(ACCOUNT_KEY, email); } catch (e) {}
+function setCurrentUser(email, remember) {
+  try {
+    if (remember) {
+      localStorage.setItem(ACCOUNT_KEY, email);
+      sessionStorage.removeItem(ACCOUNT_KEY);
+    } else {
+      sessionStorage.setItem(ACCOUNT_KEY, email);
+      localStorage.removeItem(ACCOUNT_KEY);
+    }
+  } catch (e) {}
   renderAccountWidget();
 }
 function logoutUser() {
-  try { localStorage.removeItem(ACCOUNT_KEY); } catch (e) {}
+  try {
+    localStorage.removeItem(ACCOUNT_KEY);
+    sessionStorage.removeItem(ACCOUNT_KEY);
+  } catch (e) {}
   renderAccountWidget();
   navigateTo('home-view');
 }
@@ -1484,6 +1511,7 @@ function openSignInModal(onSuccess, role) {
   document.getElementById('provider-first-name').value = '';
   document.getElementById('provider-last-name').value = '';
   document.getElementById('provider-venmo').value = '';
+  document.getElementById('remember-me-checkbox').checked = true;
   document.getElementById('signin-error').style.display = 'none';
   document.getElementById('signin-modal').classList.add('active');
 }
@@ -1688,7 +1716,8 @@ function submitProviderSignUp() {
 }
 
 function finishSignIn(email) {
-  setCurrentUser(email);
+  const rememberBox = document.getElementById('remember-me-checkbox');
+  setCurrentUser(email, rememberBox ? rememberBox.checked : true);
   document.getElementById('signin-modal').classList.remove('active');
   const action = pendingSignInAction;
   pendingSignInAction = null;
@@ -2196,9 +2225,8 @@ function handlePay() {
   }
 
   const btn = document.getElementById('pay-btn');
-  const label = document.getElementById('pay-btn-label');
   btn.disabled = true;
-  label.innerText = 'Redirecting to Stripe…';
+  showToast('Redirecting to Stripe…');
   setTimeout(() => {
     window.location.href = link;
   }, 400);
@@ -2365,6 +2393,7 @@ async function renderAdminMap() {
       const marker = L.marker([acc.address.lat, acc.address.lng]).addTo(adminMapInstance);
       marker.bindPopup(`<strong>${b.serviceName}</strong><br>${prettyDate(b.dateISO)} · ${b.time}<br>${b.email}`);
       marker.on('click', () => highlightAdminJob(b.id));
+      marker.openPopup(); // requests are visible right away, no click needed
       adminMapMarkers[b.id] = marker;
       points.push([acc.address.lat, acc.address.lng]);
     }
@@ -2376,7 +2405,7 @@ async function renderAdminMap() {
     adminMapInstance.fitBounds(points, { padding: [30, 30], maxZoom: 13 });
     noteEl.innerText = `${points.length} job location${points.length > 1 ? 's' : ''} shown.`;
   } else {
-    adminMapInstance.setView([40.0583, -74.4057], 8); // New Jersey, fallback view
+    adminMapInstance.setView([40.5687, -74.5386], 11); // Bound Brook, NJ — service area default
     noteEl.innerText = 'No mappable addresses yet.';
   }
 }
@@ -2708,7 +2737,8 @@ function submitEmployeeSetup() {
   saveEmployees(employees);
 
   document.getElementById('employee-setup-modal').classList.remove('active');
-  setCurrentUser(emp.email);
+  const rememberBox = document.getElementById('employee-setup-remember');
+  setCurrentUser(emp.email, rememberBox ? rememberBox.checked : true);
   renderEmployeeDashboard();
   navigateTo('employee-view');
   showToast(`Welcome aboard, ${emp.firstName}!`);
@@ -2756,6 +2786,7 @@ async function renderWorkerMap(relevantBookings) {
       const marker = L.marker([acc.address.lat, acc.address.lng]).addTo(workerMapInstance);
       marker.bindPopup(`<strong>${b.serviceName}</strong><br>${prettyDate(b.dateISO)} · ${b.time}`);
       marker.on('click', () => highlightWorkerJob(b.id));
+      marker.openPopup(); // requests are visible right away, no click needed
       workerMapMarkers[b.id] = marker;
       points.push([acc.address.lat, acc.address.lng]);
     }
@@ -2767,7 +2798,7 @@ async function renderWorkerMap(relevantBookings) {
     workerMapInstance.fitBounds(points, { padding: [30, 30], maxZoom: 13 });
     noteEl.innerText = `${points.length} job location${points.length > 1 ? 's' : ''} shown.`;
   } else {
-    workerMapInstance.setView([40.0583, -74.4057], 8); // New Jersey, fallback view
+    workerMapInstance.setView([40.5687, -74.5386], 11); // Bound Brook, NJ — service area default
     noteEl.innerText = 'No mappable addresses yet.';
   }
 }
