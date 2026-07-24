@@ -970,24 +970,11 @@
           </p>
         </div>
 
-        <label class="form-label" for="pay-name">Name on card</label>
-        <input class="form-input" id="pay-name" placeholder="Jane Doe">
-        <label class="form-label" for="pay-email">Email</label>
-        <input class="form-input" id="pay-email" type="text" placeholder="you@email.com">
-        <label class="form-label" for="pay-card">Card number</label>
-        <input class="form-input" id="pay-card" placeholder="4242 4242 4242 4242" inputmode="numeric">
-        <div class="form-row2">
-          <div>
-            <label class="form-label" for="pay-exp">Expiry</label>
-            <input class="form-input" id="pay-exp" placeholder="MM/YY">
-          </div>
-          <div>
-            <label class="form-label" for="pay-cvc">CVC</label>
-            <input class="form-input" id="pay-cvc" placeholder="123" inputmode="numeric">
-          </div>
-        </div>
+        <p style="color:var(--muted-foreground);font-size:0.9rem;line-height:1.5;">
+          Click below to securely enter your card details on Stripe's own checkout page. You'll be brought back here automatically once payment is complete.
+        </p>
         <button class="pill-btn full-btn" type="button" id="pay-btn" onclick="handlePay()"><span id="pay-btn-label">Pay</span> <span id="pay-btn-amount">$0</span></button>
-        <p class="fine-print">Demo checkout — no real payment is processed.</p>
+        <p class="fine-print">You'll be taken to Stripe's secure checkout to complete payment (test mode).</p>
       </div>
     </div>
   </div>
@@ -1982,19 +1969,45 @@ function renderCheckout() {
   document.getElementById('pay-btn-amount').innerText = `$${total}`;
 }
 
+// Real Stripe test-mode Payment Link. When the customer clicks Pay, they're
+// sent to Stripe's own hosted checkout (real card entry, test mode) instead
+// of a fake in-page form. IMPORTANT: in the Stripe Dashboard, this link's
+// "After payment" redirect must be set to:
+//   https://arjunobliprabu.github.io/lawn-snow-care-app/?stripe_success=1
+// so the app knows to turn the cart into a confirmed booking when the
+// customer comes back. Known limitation: without a backend to verify the
+// payment server-side, this app trusts that redirect — it can't
+// cryptographically confirm the charge actually happened the way a real
+// backend + webhook setup would.
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_8x2bIU9Vs1jH8lybTU0gw00";
+
 function handlePay() {
   const btn = document.getElementById('pay-btn');
   const label = document.getElementById('pay-btn-label');
   btn.disabled = true;
-  label.innerText = 'Processing…';
+  label.innerText = 'Redirecting to Stripe…';
   setTimeout(() => {
-    confirmCartAsBookings();
-    btn.disabled = false;
-    label.innerText = 'Pay';
-    renderConfirmation();
-    navigateTo('confirmation-view');
-    showToast('Payment successful — booking confirmed!');
-  }, 600);
+    window.location.href = STRIPE_PAYMENT_LINK;
+  }, 400);
+}
+
+// Called on page load. If Stripe just redirected the customer back here
+// after a successful payment, finish the checkout for them.
+function checkForStripeReturn() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('stripe_success') !== '1') return;
+
+  const email = getCurrentUser();
+  const cart = getCart().filter(c => c.email === email);
+  if (cart.length === 0) return; // nothing pending, or already processed
+
+  confirmCartAsBookings();
+  renderConfirmation();
+  navigateTo('confirmation-view');
+  showToast('Payment successful — booking confirmed!');
+
+  // Clean the URL so refreshing doesn't re-trigger this.
+  history.replaceState({}, document.title, location.pathname);
 }
 
 /* ============================================================
@@ -2559,6 +2572,7 @@ document.addEventListener('keydown', (e) => {
 });
 renderAccountWidget();
 checkForInviteInUrl();
+checkForStripeReturn();
 renderOfferings('springfall-offerings', SPRING_FALL_OFFERINGS, 'warm');
 renderOfferings('winter-offerings', WINTER_OFFERINGS, 'cool');
 refreshCartBadges();
