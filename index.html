@@ -792,6 +792,32 @@
       <h2 class="font-display" style="font-size:1.6rem;">Customers</h2>
       <div id="admin-customers-list" style="margin-top:16px;"></div>
     </section>
+
+    <section style="margin-top:40px;">
+      <div class="top-row">
+        <h2 class="font-display" style="font-size:1.6rem;margin:0;">Employees</h2>
+        <button class="add-btn" onclick="openAddEmployeeModal()">+ Add Employee</button>
+      </div>
+      <p class="signin-note" style="margin-top:8px;">This app can't send real emails on its own — after you add someone, copy their invite link and send it to them yourself (text, email, whatever's easiest).</p>
+      <div id="admin-employees-list" style="margin-top:16px;"></div>
+    </section>
+  </div>
+</div>
+
+<!-- ================= EMPLOYEE DASHBOARD ================= -->
+<div id="employee-view" class="view">
+  <div class="wrap-wide">
+    <div class="top-row">
+      <button class="back-link" onclick="navigateTo('home-view')">← Back to site</button>
+      <span class="eyebrow" style="margin:0;">Signed in as employee</span>
+    </div>
+    <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Hi, <span id="employee-dashboard-name"></span></h1>
+    <p class="subtitle" style="max-width:520px;">Here's the full job schedule, so you know what's coming up.</p>
+
+    <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Upcoming jobs</h2>
+      <div id="employee-jobs-list" style="margin-top:16px;"></div>
+    </section>
   </div>
 </div>
 
@@ -891,6 +917,52 @@
   </div>
 </div>
 
+<!-- ================= ADD EMPLOYEE MODAL ================= -->
+<div class="modal-overlay" id="add-employee-modal" onclick="if(event.target===this) closeAddEmployeeModal();">
+  <div class="modal-box" style="max-width:380px;">
+    <button class="modal-close-btn" onclick="closeAddEmployeeModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display">Add Employee</h2>
+    <p class="modal-sub">Enter their info — you'll get a personal invite link to send them.</p>
+
+    <label class="form-label" for="emp-first-name">First name</label>
+    <input class="form-input" id="emp-first-name" type="text" placeholder="Sam">
+    <label class="form-label" for="emp-last-name">Last name</label>
+    <input class="form-input" id="emp-last-name" type="text" placeholder="Rivera">
+    <label class="form-label" for="emp-email">Email</label>
+    <input class="form-input" id="emp-email" type="text" placeholder="sam@email.com">
+
+    <p id="add-employee-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
+
+    <button class="pill-btn full-btn" type="button" onclick="submitAddEmployee()">Create Invite</button>
+  </div>
+</div>
+
+<!-- ================= INVITE LINK RESULT MODAL ================= -->
+<div class="modal-overlay" id="invite-link-modal" onclick="if(event.target===this) closeInviteLinkModal();">
+  <div class="modal-box" style="max-width:420px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeInviteLinkModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;">Invite ready!</h2>
+    <p class="modal-sub">Copy this link and send it to <span id="invite-link-name"></span> yourself — the app can't email it for you.</p>
+    <input class="form-input" id="invite-link-box" type="text" readonly style="text-align:center;font-size:0.8rem;">
+    <button class="pill-btn full-btn" type="button" onclick="copyInviteLink()">Copy Link</button>
+  </div>
+</div>
+
+<!-- ================= EMPLOYEE SET PASSWORD (INVITE ACCEPT) MODAL ================= -->
+<div class="modal-overlay" id="employee-setup-modal">
+  <div class="modal-box" style="max-width:380px;">
+    <h2 class="modal-title font-display">Welcome, <span id="employee-setup-name"></span></h2>
+    <p class="modal-sub">You've been invited to join as an employee. Set a password to finish creating your account.</p>
+
+    <label class="form-label" for="employee-setup-password">Choose a password</label>
+    <input class="form-input" id="employee-setup-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){event.preventDefault();submitEmployeeSetup();}">
+
+    <p id="employee-setup-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
+
+    <button class="pill-btn full-btn" type="button" onclick="submitEmployeeSetup()">Finish Setting Up My Account</button>
+  </div>
+</div>
+
 <script>
 /* ============================================================
    DATA
@@ -919,6 +991,7 @@ const BOOKINGS_KEY = "lc.bookings.v1";
 const CART_KEY = "lc.cart.v1";
 const ACCOUNT_KEY = "lc.currentUser.v1";
 const ACCOUNTS_KEY = "lc.accounts.v1";
+const EMPLOYEES_KEY = "lc.employees.v1";
 
 // Demo-only admin login. IMPORTANT: this app has no server, so this password
 // lives in plain text in this file's code — anyone who opens the page source
@@ -926,6 +999,22 @@ const ACCOUNTS_KEY = "lc.accounts.v1";
 // here. For a real business you'd eventually move this to a real backend.
 const ADMIN_EMAIL = "arjun.obliprabu@gmail.com";
 const ADMIN_PASSWORD = "Arjun123$";
+
+/* ============================================================
+   EMPLOYEES (admin adds them, they accept an invite link)
+   ============================================================ */
+function getEmployees() { return readStore(EMPLOYEES_KEY, []); }
+function saveEmployees(list) { writeStore(EMPLOYEES_KEY, list); }
+function findEmployee(email) {
+  return getEmployees().find(e => e.email.toLowerCase() === email.toLowerCase()) || null;
+}
+function isEmployeeEmail(email) {
+  const emp = findEmployee(email);
+  return !!(emp && emp.status === 'active');
+}
+function generateInviteToken() {
+  return 'inv_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 /* ============================================================
    ACCOUNTS (sign up / sign in / admin)
@@ -1029,6 +1118,21 @@ function submitSignIn() {
     return;
   }
 
+  // Employee login
+  const employee = findEmployee(email);
+  if (employee) {
+    if (employee.status === 'pending') {
+      showAuthError("Your invite hasn't been set up yet — please use the invite link you were sent to create your password first.");
+      return;
+    }
+    if (employee.password !== password) {
+      showAuthError("Incorrect password.");
+      return;
+    }
+    finishSignIn(email);
+    return;
+  }
+
   // Regular customer login
   const account = findAccount(email);
   if (!account) {
@@ -1056,6 +1160,10 @@ function submitSignUp() {
   }
   if (isAdminEmail(email)) {
     showAuthError("That email is reserved. Please use a different one.");
+    return;
+  }
+  if (findEmployee(email)) {
+    showAuthError("That email belongs to an employee account. Please use a different one.");
     return;
   }
   if (!password || password.length < 6) {
@@ -1097,6 +1205,9 @@ function finishSignIn(email) {
   if (isAdminEmail(email)) {
     renderAdminDashboard();
     navigateTo('admin-view');
+  } else if (isEmployeeEmail(email)) {
+    renderEmployeeDashboard();
+    navigateTo('employee-view');
   } else if (action) {
     action();
   }
@@ -1108,10 +1219,20 @@ function renderAccountWidget() {
   if (email) {
     const initial = email.trim()[0].toUpperCase();
     const admin = isAdminEmail(email);
+    const employee = isEmployeeEmail(email) ? findEmployee(email) : null;
+    let label = email;
+    let dashboardBtn = '';
+    if (admin) {
+      label = 'Admin';
+      dashboardBtn = `<button onclick="renderAdminDashboard(); navigateTo('admin-view');" style="text-decoration:underline;">Dashboard</button>`;
+    } else if (employee) {
+      label = `${employee.firstName} (Employee)`;
+      dashboardBtn = `<button onclick="renderEmployeeDashboard(); navigateTo('employee-view');" style="text-decoration:underline;">Dashboard</button>`;
+    }
     el.innerHTML = `
       <span class="account-avatar">${initial}</span>
-      <span>${admin ? 'Admin' : email}</span>
-      ${admin ? `<button onclick="renderAdminDashboard(); navigateTo('admin-view');" style="text-decoration:underline;">Dashboard</button>` : ''}
+      <span>${label}</span>
+      ${dashboardBtn}
       <button class="logout-link" onclick="logoutUser()">Log out</button>
     `;
   } else {
@@ -1593,11 +1714,184 @@ function renderAdminDashboard() {
     `;
     }).join('');
   }
+
+  renderAdminEmployeesList();
+}
+
+function renderAdminEmployeesList() {
+  const list = document.getElementById('admin-employees-list');
+  const employees = getEmployees();
+  if (employees.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted-foreground);">No employees added yet.</p>';
+    return;
+  }
+  list.innerHTML = employees.map(e => `
+    <div class="appt-row">
+      <div>
+        <p style="margin:0;font-weight:500;">${e.firstName} ${e.lastName}</p>
+        <p class="meta">${e.email} — ${e.status === 'active' ? 'Active' : 'Invite pending'}</p>
+      </div>
+      <div style="text-align:right;display:flex;gap:8px;align-items:center;">
+        ${e.status === 'pending' ? `<button class="add-btn" onclick="showInviteLink('${e.email.replace(/'/g, "\\'")}')">Copy Invite Link</button>` : ''}
+        <button class="remove-btn" onclick="openDeleteEmployeeModal('${e.email.replace(/'/g, "\\'")}')">Remove</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   ADD EMPLOYEE / INVITE FLOW
+   ============================================================ */
+function openAddEmployeeModal() {
+  document.getElementById('emp-first-name').value = '';
+  document.getElementById('emp-last-name').value = '';
+  document.getElementById('emp-email').value = '';
+  document.getElementById('add-employee-error').style.display = 'none';
+  document.getElementById('add-employee-modal').classList.add('active');
+}
+function closeAddEmployeeModal() {
+  document.getElementById('add-employee-modal').classList.remove('active');
+}
+
+function submitAddEmployee() {
+  const firstName = document.getElementById('emp-first-name').value.trim();
+  const lastName = document.getElementById('emp-last-name').value.trim();
+  const email = document.getElementById('emp-email').value.trim();
+  const errorEl = document.getElementById('add-employee-error');
+
+  if (!firstName || !lastName) {
+    errorEl.innerText = 'Please enter both a first and last name.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    errorEl.innerText = 'Please enter a valid email.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (isAdminEmail(email) || findAccount(email) || findEmployee(email)) {
+    errorEl.innerText = 'That email is already in use by another account.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  const employees = getEmployees();
+  employees.push({
+    firstName, lastName, email,
+    status: 'pending',
+    inviteToken: generateInviteToken(),
+    password: null
+  });
+  saveEmployees(employees);
+
+  closeAddEmployeeModal();
+  renderAdminEmployeesList();
+  showInviteLink(email);
+}
+
+function showInviteLink(email) {
+  const emp = findEmployee(email);
+  if (!emp) return;
+  const link = `${location.origin}${location.pathname}?invite=${emp.inviteToken}`;
+  document.getElementById('invite-link-name').innerText = `${emp.firstName} ${emp.lastName}`;
+  document.getElementById('invite-link-box').value = link;
+  document.getElementById('invite-link-modal').classList.add('active');
+}
+function closeInviteLinkModal() {
+  document.getElementById('invite-link-modal').classList.remove('active');
+}
+function copyInviteLink() {
+  const box = document.getElementById('invite-link-box');
+  box.select();
+  try {
+    navigator.clipboard.writeText(box.value);
+    showToast('Invite link copied!');
+  } catch (e) {
+    showToast('Select the link above and copy it manually.');
+  }
+}
+
+function openDeleteEmployeeModal(email) {
+  // Reuses the same confirm modal as deleting a customer, but tagged as an employee delete.
+  pendingDeleteType = 'employee';
+  pendingDeleteEmail = email;
+  document.getElementById('delete-customer-name').innerText = email;
+  document.getElementById('delete-customer-modal').classList.add('active');
+}
+
+/* ============================================================
+   EMPLOYEE INVITE ACCEPTANCE (set password) + EMPLOYEE DASHBOARD
+   ============================================================ */
+let pendingInviteToken = null;
+
+function checkForInviteInUrl() {
+  const params = new URLSearchParams(location.search);
+  const token = params.get('invite');
+  if (!token) return;
+  const employees = getEmployees();
+  const emp = employees.find(e => e.inviteToken === token);
+  if (!emp) return;
+  if (emp.status === 'active') return; // already set up, just sign in normally
+  pendingInviteToken = token;
+  document.getElementById('employee-setup-name').innerText = emp.firstName;
+  document.getElementById('employee-setup-password').value = '';
+  document.getElementById('employee-setup-error').style.display = 'none';
+  document.getElementById('employee-setup-modal').classList.add('active');
+}
+
+function submitEmployeeSetup() {
+  const password = document.getElementById('employee-setup-password').value;
+  const errorEl = document.getElementById('employee-setup-error');
+  if (!password || password.length < 6) {
+    errorEl.innerText = "Please choose a password that's at least 6 characters.";
+    errorEl.style.display = 'block';
+    return;
+  }
+  const employees = getEmployees();
+  const emp = employees.find(e => e.inviteToken === pendingInviteToken);
+  if (!emp) {
+    errorEl.innerText = 'This invite link is no longer valid.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  emp.status = 'active';
+  emp.password = password;
+  saveEmployees(employees);
+
+  document.getElementById('employee-setup-modal').classList.remove('active');
+  setCurrentUser(emp.email);
+  renderEmployeeDashboard();
+  navigateTo('employee-view');
+  showToast(`Welcome aboard, ${emp.firstName}!`);
+}
+
+function renderEmployeeDashboard() {
+  const email = getCurrentUser();
+  const emp = findEmployee(email);
+  document.getElementById('employee-dashboard-name').innerText = emp ? emp.firstName : '';
+
+  const bookings = getBookings().slice().sort((a, b) => (a.dateISO + a.time).localeCompare(b.dateISO + b.time));
+  const list = document.getElementById('employee-jobs-list');
+  if (bookings.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted-foreground);">No jobs scheduled yet.</p>';
+  } else {
+    list.innerHTML = bookings.map(b => `
+      <div class="appt-row">
+        <div>
+          <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — for ${b.email}</p>
+        </div>
+      </div>
+    `).join('');
+  }
 }
 
 let pendingDeleteEmail = null;
+let pendingDeleteType = 'customer';
 
 function openDeleteCustomerModal(email) {
+  pendingDeleteType = 'customer';
   pendingDeleteEmail = email;
   document.getElementById('delete-customer-name').innerText = email;
   document.getElementById('delete-customer-modal').classList.add('active');
@@ -1606,11 +1900,24 @@ function openDeleteCustomerModal(email) {
 function closeDeleteCustomerModal() {
   document.getElementById('delete-customer-modal').classList.remove('active');
   pendingDeleteEmail = null;
+  pendingDeleteType = 'customer';
 }
 
 function confirmDeleteCustomer() {
   if (!pendingDeleteEmail) return;
   const email = pendingDeleteEmail;
+  const type = pendingDeleteType;
+
+  if (type === 'employee') {
+    const employees = getEmployees().filter(e => e.email.toLowerCase() !== email.toLowerCase());
+    saveEmployees(employees);
+    closeDeleteCustomerModal();
+    pendingDeleteType = 'customer';
+    renderAdminEmployeesList();
+    showToast(`Removed employee: ${email}`);
+    return;
+  }
+
   const accounts = getAccounts().filter(a => a.email.toLowerCase() !== email.toLowerCase());
   saveAccounts(accounts);
   closeDeleteCustomerModal();
@@ -1684,6 +1991,7 @@ document.addEventListener('keydown', (e) => {
 });
 initTheme();
 renderAccountWidget();
+checkForInviteInUrl();
 renderOfferings('springfall-offerings', SPRING_FALL_OFFERINGS, 'warm');
 renderOfferings('winter-offerings', WINTER_OFFERINGS, 'cool');
 refreshCartBadges();
