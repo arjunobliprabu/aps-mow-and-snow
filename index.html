@@ -973,6 +973,9 @@
         <p style="color:var(--muted-foreground);font-size:0.9rem;line-height:1.5;">
           Click below to securely enter your card details on Stripe's own checkout page. You'll be brought back here automatically once payment is complete.
         </p>
+        <div id="checkout-multi-warning" style="display:none;background:#fdecea;border:1px solid #f3b9b0;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#8a2f24;font-size:0.85rem;">
+          Only one service can be paid for at a time right now. Please go back to your cart and remove all but one item before continuing.
+        </div>
         <button class="pill-btn full-btn" type="button" id="pay-btn" onclick="handlePay()"><span id="pay-btn-label">Pay</span> <span id="pay-btn-amount">$0</span></button>
         <p class="fine-print">You'll be taken to Stripe's secure checkout to complete payment (test mode).</p>
       </div>
@@ -1967,27 +1970,69 @@ function renderCheckout() {
   });
   document.getElementById('checkout-total').innerText = `$${total}`;
   document.getElementById('pay-btn-amount').innerText = `$${total}`;
+
+  const warningEl = document.getElementById('checkout-multi-warning');
+  const payBtn = document.getElementById('pay-btn');
+  if (cart.length > 1) {
+    warningEl.style.display = 'block';
+    payBtn.disabled = true;
+  } else {
+    warningEl.style.display = 'none';
+    payBtn.disabled = false;
+  }
 }
 
-// Real Stripe test-mode Payment Link. When the customer clicks Pay, they're
-// sent to Stripe's own hosted checkout (real card entry, test mode) instead
-// of a fake in-page form. IMPORTANT: in the Stripe Dashboard, this link's
-// "After payment" redirect must be set to:
+// Real Stripe test-mode Payment Links, one per exact service and price —
+// this way each checkout charges the correct, exact amount automatically,
+// with no risk of a customer typing in the wrong number. IMPORTANT: in the
+// Stripe Dashboard, each of these links' "After payment" redirect must be
+// set to:
 //   https://arjunobliprabu.github.io/lawn-snow-care-app/?stripe_success=1
 // so the app knows to turn the cart into a confirmed booking when the
-// customer comes back. Known limitation: without a backend to verify the
-// payment server-side, this app trusts that redirect — it can't
-// cryptographically confirm the charge actually happened the way a real
-// backend + webhook setup would.
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_8x2bIU9Vs1jH8lybTU0gw00";
+// customer comes back. Known limitations:
+// 1) Without a backend to verify the payment server-side, this app trusts
+//    that redirect — it can't cryptographically confirm the charge actually
+//    happened the way a real backend + webhook setup would.
+// 2) Since each link is single-price, checkout only supports ONE service at
+//    a time — a cart with more than one item can't be combined into a
+//    single accurate Stripe charge without a real backend.
+const SERVICE_STRIPE_LINKS = {
+  "Seasonal snow plan": "https://buy.stripe.com/test_5kQ9AMgjQ2nL9pCcXY0gw02",
+  "Car cleaning (snow)": "https://buy.stripe.com/test_14A3cogjQ7I559mbTU0gw03",
+  "Shoveling snow": "https://buy.stripe.com/test_5kQaEQ7NkbYl7hu3no0gw04",
+  "Snow plowing": "https://buy.stripe.com/test_7sY3co5Fc3rP9pCgaa0gw05",
+  "Seasonal cleanup": "https://buy.stripe.com/test_7sY9AM3x49QdbxK5vw0gw06",
+  "Plant watering": "https://buy.stripe.com/test_eVq5kwebIfax45if660gw07",
+  "Weed whacking": "https://buy.stripe.com/test_5kQaEQ6Jgd2pcBObTU0gw08",
+  "Leaf blowing": "https://buy.stripe.com/test_6oUfZa8Rofax8lyf660gw09",
+  "Lawn mowing — front yard": "https://buy.stripe.com/test_8x228k4B80fD6dq1fg0gw0a",
+  "Lawn mowing — back yard": "https://buy.stripe.com/test_28E4gs7Nk5zXgS49LM0gw0b"
+};
 
 function handlePay() {
+  const email = getCurrentUser();
+  const cart = getCart().filter(c => c.email === email);
+
+  if (cart.length === 0) return;
+
+  if (cart.length > 1) {
+    showToast('Please check out one service at a time — remove extra items from your cart first.');
+    return;
+  }
+
+  const item = cart[0];
+  const link = SERVICE_STRIPE_LINKS[item.serviceName];
+  if (!link) {
+    showToast(`No payment link is set up yet for "${item.serviceName}".`);
+    return;
+  }
+
   const btn = document.getElementById('pay-btn');
   const label = document.getElementById('pay-btn-label');
   btn.disabled = true;
   label.innerText = 'Redirecting to Stripe…';
   setTimeout(() => {
-    window.location.href = STRIPE_PAYMENT_LINK;
+    window.location.href = link;
   }, 400);
 }
 
