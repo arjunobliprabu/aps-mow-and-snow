@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Our Services — Seasonal Lawn & Snow Care</title>
+<title>AP's Mow and Snow — Seasonal Lawn & Snow Care</title>
 
 <!--
   ============================================================
   HOW TO CUSTOMIZE THIS APP (no coding experience needed):
 
-  1. BUSINESS NAME / TAGLINE: search for "Our Services" and
+  1. BUSINESS NAME / TAGLINE: search for "AP's Mow and Snow" and
      "Year-round outdoor care" near the top of the <body>.
 
   2. SERVICES & PRICES: search for "const OFFERINGS" — there are
@@ -88,6 +88,18 @@
 
   .view { display: none; min-height: 100vh; }
   .view.active { display: block; }
+
+  #home-view { position: relative; overflow: hidden; }
+  #home-view .wrap { position: relative; z-index: 1; }
+  .home-bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .home-bg svg { display: block; width: 100%; height: 100%; }
 
   .wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px 90px; }
   .wrap-wide { max-width: 900px; margin: 0 auto; padding: 60px 24px 90px; }
@@ -563,9 +575,204 @@
 
 <!-- ================= HOME ================= -->
 <div id="home-view" class="view active">
+  <div class="home-bg">
+    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="floralGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#eafbe0"/>
+          <stop offset="55%" stop-color="#fdf6e3"/>
+          <stop offset="100%" stop-color="#fdeef2"/>
+        </linearGradient>
+        <linearGradient id="winterGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e8f4fb"/>
+          <stop offset="55%" stop-color="#eef6fb"/>
+          <stop offset="100%" stop-color="#dcecf6"/>
+        </linearGradient>
+      </defs>
+
+      <!-- Left half: spring/summer floral background -->
+      <rect x="0" y="0" width="500" height="2200" fill="url(#floralGrad)"/>
+      <!-- Right half: winter background -->
+      <rect x="500" y="0" width="500" height="2200" fill="url(#winterGrad)"/>
+
+      <!-- Grass tufts along the bottom, left side -->
+      <g stroke="#8bc47e" stroke-width="4" stroke-linecap="round" opacity="0.55">
+        <path d="M20,2190 Q25,2150 15,2110"/>
+        <path d="M40,2190 Q48,2145 42,2100"/>
+        <path d="M60,2190 Q55,2150 65,2115"/>
+        <path d="M160,2190 Q168,2150 158,2110"/>
+        <path d="M180,2190 Q186,2145 178,2100"/>
+        <path d="M330,2190 Q338,2150 328,2110"/>
+        <path d="M350,2190 Q356,2145 348,2100"/>
+        <path d="M440,2190 Q448,2150 438,2110"/>
+        <path d="M460,2190 Q466,2145 458,2100"/>
+      </g>
+
+      <!-- Vine squiggle down the far left edge -->
+      <path d="M15,0 Q45,120 15,240 Q-15,360 15,480 Q45,600 15,720 Q-15,840 15,960 Q45,1080 15,1200 Q-15,1320 15,1440 Q45,1560 15,1680 Q-15,1800 15,1920 Q45,2040 15,2160"
+            fill="none" stroke="#8bc47e" stroke-width="5" opacity="0.5"/>
+
+      <!-- Flowers (each: 5 petals + center) -->
+      <g transform="translate(90,180)">
+        <circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/>
+        <circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/>
+        <circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
+      </g>
+      <g transform="translate(300,340) scale(1.2)">
+        <circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/>
+        <circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/>
+        <circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
+      </g>
+      <g transform="translate(150,560)">
+        <circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/>
+        <circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/>
+        <circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/>
+      </g>
+      <g transform="translate(400,750) scale(1.1)">
+        <circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/>
+        <circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/>
+        <circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/>
+      </g>
+      <g transform="translate(80,960)">
+        <circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/>
+        <circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/>
+        <circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
+      </g>
+      <g transform="translate(320,1150) scale(1.2)">
+        <circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/>
+        <circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/>
+        <circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
+      </g>
+      <g transform="translate(160,1370)">
+        <circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/>
+        <circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/>
+        <circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/>
+      </g>
+      <g transform="translate(410,1560) scale(1.1)">
+        <circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/>
+        <circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/>
+        <circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/>
+      </g>
+      <g transform="translate(100,1780)">
+        <circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/>
+        <circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/>
+        <circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
+      </g>
+      <g transform="translate(340,1980) scale(1.15)">
+        <circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/>
+        <circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/>
+        <circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
+      </g>
+
+      <!-- Bees -->
+      <g transform="translate(220,260) rotate(-15)">
+        <ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+        <ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+        <ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/>
+        <path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/>
+        <circle cx="10" cy="0" r="3" fill="#2b2b2b"/>
+      </g>
+      <g transform="translate(430,880) rotate(10) scale(0.85)">
+        <ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+        <ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+        <ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/>
+        <path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/>
+        <circle cx="10" cy="0" r="3" fill="#2b2b2b"/>
+      </g>
+      <g transform="translate(120,1480) rotate(-8) scale(0.9)">
+        <ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+        <ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/>
+        <ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/>
+        <path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/>
+        <circle cx="10" cy="0" r="3" fill="#2b2b2b"/>
+      </g>
+
+      <!-- String lights along the top of the winter side -->
+      <path d="M520,40 Q600,90 680,40 T840,40 T980,40" fill="none" stroke="#bcd6e6" stroke-width="3" opacity="0.8"/>
+      <circle cx="560" cy="60" r="7" fill="#ff6b6b"/>
+      <circle cx="640" cy="70" r="7" fill="#5bc27a"/>
+      <circle cx="720" cy="60" r="7" fill="#f7d154"/>
+      <circle cx="800" cy="70" r="7" fill="#6bb4ff"/>
+      <circle cx="880" cy="60" r="7" fill="#ff6b6b"/>
+      <circle cx="950" cy="70" r="7" fill="#5bc27a"/>
+
+      <!-- Snowflakes -->
+      <g stroke="#a9cfe8" stroke-width="4" stroke-linecap="round" opacity="0.9">
+        <g transform="translate(600,220)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(880,380) scale(0.7)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(700,620) scale(1.2)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(950,900)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(600,1080) scale(0.8)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(870,1330)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(650,1600) scale(1.1)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(940,1850) scale(0.75)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+        <g transform="translate(610,2020)">
+          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
+        </g>
+      </g>
+
+      <!-- Christmas trees -->
+      <g transform="translate(760,500)">
+        <rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/>
+        <polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/>
+        <polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/>
+        <polygon points="0,0 -20,42 20,42" fill="#57995f"/>
+        <circle cx="0" cy="-38" r="5" fill="#f7d154"/>
+        <circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/>
+        <circle cx="12" cy="0" r="3.5" fill="#f7d154"/>
+        <circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/>
+        <circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/>
+      </g>
+      <g transform="translate(890,1120) scale(0.85)">
+        <rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/>
+        <polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/>
+        <polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/>
+        <polygon points="0,0 -20,42 20,42" fill="#57995f"/>
+        <circle cx="0" cy="-38" r="5" fill="#f7d154"/>
+        <circle cx="-10" cy="10" r="3.5" fill="#6bb4ff"/>
+        <circle cx="12" cy="0" r="3.5" fill="#ff6b6b"/>
+        <circle cx="-6" cy="28" r="3.5" fill="#f7d154"/>
+        <circle cx="10" cy="34" r="3.5" fill="#6bb4ff"/>
+      </g>
+      <g transform="translate(600,1750) scale(0.95)">
+        <rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/>
+        <polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/>
+        <polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/>
+        <polygon points="0,0 -20,42 20,42" fill="#57995f"/>
+        <circle cx="0" cy="-38" r="5" fill="#f7d154"/>
+        <circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/>
+        <circle cx="12" cy="0" r="3.5" fill="#f7d154"/>
+        <circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/>
+        <circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/>
+      </g>
+
+      <!-- Squiggly divider down the middle -->
+      <path d="M500,0 Q560,60 500,120 Q440,180 500,240 Q560,300 500,360 Q440,420 500,480 Q560,540 500,600 Q440,660 500,720 Q560,780 500,840 Q440,900 500,960 Q560,1020 500,1080 Q440,1140 500,1200 Q560,1260 500,1320 Q440,1380 500,1440 Q560,1500 500,1560 Q440,1620 500,1680 Q560,1740 500,1800 Q440,1860 500,1920 Q560,1980 500,2040 Q440,2100 500,2160 Q560,2200 500,2200"
+            fill="none" stroke="#ffffff" stroke-width="10" opacity="0.9"/>
+      <path d="M500,0 Q560,60 500,120 Q440,180 500,240 Q560,300 500,360 Q440,420 500,480 Q560,540 500,600 Q440,660 500,720 Q560,780 500,840 Q440,900 500,960 Q560,1020 500,1080 Q440,1140 500,1200 Q560,1260 500,1320 Q440,1380 500,1440 Q560,1500 500,1560 Q440,1620 500,1680 Q560,1740 500,1800 Q440,1860 500,1920 Q560,1980 500,2040 Q440,2100 500,2160 Q560,2200 500,2200"
+            fill="none" stroke="#c8a2e0" stroke-width="4" opacity="0.7"/>
+    </svg>
+  </div>
+
   <div class="wrap">
     <p class="eyebrow">Year-round outdoor care</p>
-    <h1 class="big-title font-display">Our Services</h1>
+    <h1 class="big-title font-display">AP's Mow and Snow</h1>
     <p class="subtitle">From the first thaw to the last flurry — we keep your property looking sharp every season of the year.</p>
 
     <div class="cards-grid">
