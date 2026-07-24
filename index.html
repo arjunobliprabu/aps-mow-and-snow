@@ -509,6 +509,25 @@
     box-shadow: 0 6px 18px -8px rgba(0,0,0,0.25);
     font-size: 0.85rem;
   }
+  .home-cart-widget {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 60;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 10px 16px;
+    box-shadow: 0 6px 18px -8px rgba(0,0,0,0.25);
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--foreground);
+  }
+  .home-cart-widget:hover { opacity: 0.9; }
   .account-avatar {
     width: 26px; height: 26px;
     border-radius: 50%;
@@ -560,6 +579,9 @@
 
 <!-- ================= HOME ================= -->
 <div id="home-view" class="view active">
+  <button class="home-cart-widget" onclick="navigateTo('cart-view')">
+    🛒 Cart <span class="cart-badge" id="cart-badge-home" style="display:none;"></span>
+  </button>
   <div class="home-bg">
     <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -1865,7 +1887,7 @@ function navigateTo(viewId) {
 function refreshCartBadges() {
   const email = getCurrentUser();
   const count = getCart().filter(c => c.email === email).length;
-  [ "cart-badge-sf", "cart-badge-w" ].forEach(id => {
+  [ "cart-badge-sf", "cart-badge-w", "cart-badge-home" ].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     if (count > 0) { el.style.display = 'inline-block'; el.innerText = count; }
