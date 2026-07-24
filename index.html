@@ -818,7 +818,7 @@
       <span class="eyebrow" style="margin:0;">Signed in as service provider</span>
     </div>
     <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Hi, <span id="employee-dashboard-name"></span></h1>
-    <p class="subtitle" style="max-width:520px;">Request open jobs, then check back here to see what you've been approved for. You keep 65% of every job you complete.</p>
+    <p class="subtitle" style="max-width:520px;">Request open jobs, then check back here to see what you've been approved for. You keep 85% of every job you complete.</p>
 
     <section style="margin-top:40px;">
       <div class="panel" style="text-align:center;max-width:260px;margin:0 auto;">
@@ -1060,9 +1060,9 @@ function generateInviteToken() {
   return 'inv_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-// Revenue split once a job is assigned to a service provider: they get 65%,
-// the admin keeps 35%. Rounded to the cent.
-const PROVIDER_SHARE = 0.65;
+// Revenue split once a job is assigned to a service provider: they get 85%,
+// the admin keeps 15%. Rounded to the cent.
+const PROVIDER_SHARE = 0.85;
 function splitJobPrice(price) {
   const providerCut = Math.round(price * PROVIDER_SHARE * 100) / 100;
   const adminCut = Math.round((price - providerCut) * 100) / 100;
@@ -1825,7 +1825,7 @@ function renderAdminDashboard() {
   document.getElementById('admin-stat-bookings').innerText = bookings.length;
   // Total revenue = what the admin actually keeps. A job done in-house (no
   // service provider assigned) counts in full; a job handed off to a
-  // provider only counts the admin's 35% cut, since the provider keeps 65%.
+  // provider only counts the admin's 15% cut, since the provider keeps 85%.
   const revenue = bookings.reduce((sum, b) => {
     return sum + (b.assignedProviderEmail ? splitJobPrice(b.price).adminCut : b.price);
   }, 0);
@@ -1840,7 +1840,7 @@ function renderAdminDashboard() {
       let priceLabel = `$${b.price}`;
       if (b.assignedProviderEmail) {
         const { adminCut } = splitJobPrice(b.price);
-        priceLabel = `$${adminCut.toFixed(2)} <span style="font-weight:400;color:var(--muted-foreground);font-size:0.75rem;">(your 35% of $${b.price})</span>`;
+        priceLabel = `$${adminCut.toFixed(2)} <span style="font-weight:400;color:var(--muted-foreground);font-size:0.75rem;">(your 15% of $${b.price})</span>`;
         statusNote = b.completed
           ? ` — ✓ completed by ${b.assignedProviderEmail}`
           : ` — assigned to ${b.assignedProviderEmail}`;
@@ -1938,7 +1938,7 @@ function acceptJobRequest(bookingId, providerEmail) {
   const { providerCut } = splitJobPrice(booking.price);
   document.getElementById('venmo-reminder-text').innerHTML =
     `<strong>${emp ? emp.firstName + ' ' + emp.lastName : providerEmail}</strong> is assigned to <strong>${booking.serviceName}</strong> (${prettyDate(booking.dateISO)} · ${booking.time}).<br><br>
-     Their share is <strong>$${providerCut.toFixed(2)}</strong> (65% of $${booking.price}).<br><br>
+     Their share is <strong>$${providerCut.toFixed(2)}</strong> (85% of $${booking.price}).<br><br>
      Send it yourself via Venmo to: <strong>${emp && emp.venmo ? emp.venmo : 'no Venmo on file'}</strong>`;
   document.getElementById('venmo-reminder-modal').classList.add('active');
 }
@@ -2153,7 +2153,7 @@ function renderEmployeeDashboard() {
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you'd earn $${providerCut.toFixed(2)} (65% of $${b.price})</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you'd earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
         </div>
         ${alreadyRequested
           ? `<span class="meta" style="font-weight:600;">Requested — awaiting approval</span>`
@@ -2176,7 +2176,7 @@ function renderEmployeeDashboard() {
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you earn $${providerCut.toFixed(2)} (65% of $${b.price})</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
         </div>
         <button class="add-btn" onclick="markJobComplete('${b.id}')">Mark Completed</button>
       </div>
