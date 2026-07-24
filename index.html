@@ -57,20 +57,6 @@
     --cool-bg: oklch(0.96 0.03 230);
   }
 
-  html[data-theme="dark"] {
-    --background: oklch(0.19 0.015 50);
-    --foreground: oklch(0.95 0.005 90);
-    --card: oklch(0.24 0.015 50);
-    --primary: oklch(0.68 0.13 45);
-    --primary-foreground: oklch(0.16 0.01 50);
-    --secondary: oklch(0.28 0.015 60);
-    --muted-foreground: oklch(0.68 0.015 70);
-    --accent: oklch(0.5 0.1 75);
-    --border: oklch(0.34 0.015 60);
-    --warm-bg: oklch(0.27 0.03 70);
-    --cool-bg: oklch(0.26 0.025 230);
-  }
-
   * { box-sizing: border-box; }
 
   body {
@@ -91,6 +77,8 @@
 
   #home-view { position: relative; overflow: hidden; }
   #home-view .wrap { position: relative; z-index: 1; }
+  #springfall-view, #winter-view { position: relative; overflow: hidden; }
+  #springfall-view .wrap, #winter-view .wrap { position: relative; z-index: 1; }
   .home-bg {
     position: absolute;
     inset: 0;
@@ -486,27 +474,6 @@
   }
   .appt-row .meta { font-size: 0.85rem; color: var(--muted-foreground); font-family:'Inter',sans-serif; font-style:normal; }
 
-  /* Theme toggle */
-  .theme-toggle {
-    position: fixed;
-    top: 18px;
-    right: 18px;
-    z-index: 60;
-    width: 42px;
-    height: 42px;
-    border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--card);
-    color: var(--foreground);
-    cursor: pointer;
-    font-size: 1.1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 6px 18px -8px rgba(0,0,0,0.25);
-  }
-  .theme-toggle:hover { opacity: 0.85; }
-
   /* Account widget */
   .account-widget {
     position: fixed;
@@ -570,7 +537,6 @@
 </head>
 <body>
 
-<button class="theme-toggle" id="theme-toggle-btn" onclick="toggleTheme()" title="Switch light/dark mode">🌙</button>
 <div class="account-widget" id="account-widget"></div>
 
 <!-- ================= HOME ================= -->
@@ -761,12 +727,6 @@
         <circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/>
         <circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/>
       </g>
-
-      <!-- Squiggly divider down the middle -->
-      <path d="M500,0 Q560,60 500,120 Q440,180 500,240 Q560,300 500,360 Q440,420 500,480 Q560,540 500,600 Q440,660 500,720 Q560,780 500,840 Q440,900 500,960 Q560,1020 500,1080 Q440,1140 500,1200 Q560,1260 500,1320 Q440,1380 500,1440 Q560,1500 500,1560 Q440,1620 500,1680 Q560,1740 500,1800 Q440,1860 500,1920 Q560,1980 500,2040 Q440,2100 500,2160 Q560,2200 500,2200"
-            fill="none" stroke="#ffffff" stroke-width="10" opacity="0.9"/>
-      <path d="M500,0 Q560,60 500,120 Q440,180 500,240 Q560,300 500,360 Q440,420 500,480 Q560,540 500,600 Q440,660 500,720 Q560,780 500,840 Q440,900 500,960 Q560,1020 500,1080 Q440,1140 500,1200 Q560,1260 500,1320 Q440,1380 500,1440 Q560,1500 500,1560 Q440,1620 500,1680 Q560,1740 500,1800 Q440,1860 500,1920 Q560,1980 500,2040 Q440,2100 500,2160 Q560,2200 500,2200"
-            fill="none" stroke="#c8a2e0" stroke-width="4" opacity="0.7"/>
     </svg>
   </div>
 
@@ -813,6 +773,55 @@
 
 <!-- ================= SPRING / FALL ================= -->
 <div id="springfall-view" class="view">
+  <div class="home-bg">
+    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="floralGrad2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#eafbe0"/>
+          <stop offset="55%" stop-color="#fdf6e3"/>
+          <stop offset="100%" stop-color="#fdeef2"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="1000" height="2200" fill="url(#floralGrad2)"/>
+
+      <g stroke="#8bc47e" stroke-width="4" stroke-linecap="round" opacity="0.5">
+        <path d="M20,2190 Q25,2150 15,2110"/>
+        <path d="M40,2190 Q48,2145 42,2100"/>
+        <path d="M160,2190 Q168,2150 158,2110"/>
+        <path d="M330,2190 Q338,2150 328,2110"/>
+        <path d="M440,2190 Q448,2150 438,2110"/>
+        <path d="M560,2190 Q568,2150 558,2110"/>
+        <path d="M690,2190 Q698,2150 688,2110"/>
+        <path d="M820,2190 Q828,2150 818,2110"/>
+        <path d="M940,2190 Q948,2150 938,2110"/>
+      </g>
+      <path d="M15,0 Q45,120 15,240 Q-15,360 15,480 Q45,600 15,720 Q-15,840 15,960 Q45,1080 15,1200 Q-15,1320 15,1440 Q45,1560 15,1680 Q-15,1800 15,1920 Q45,2040 15,2160"
+            fill="none" stroke="#8bc47e" stroke-width="5" opacity="0.4"/>
+      <path d="M985,0 Q955,120 985,240 Q1015,360 985,480 Q955,600 985,720 Q1015,840 985,960 Q955,1080 985,1200 Q1015,1320 985,1440 Q955,1560 985,1680 Q1015,1800 985,1920 Q955,2040 985,2160"
+            fill="none" stroke="#8bc47e" stroke-width="5" opacity="0.4"/>
+
+      <g transform="translate(90,140)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(880,260) scale(1.2)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(500,340)"><circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/><circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/><circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/></g>
+      <g transform="translate(200,520) scale(1.1)"><circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/><circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/><circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/></g>
+      <g transform="translate(800,600)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(80,820)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(650,900) scale(1.2)"><circle cx="10" cy="0" r="9" fill="#ffb0a0"/><circle cx="3" cy="10" r="9" fill="#ffb0a0"/><circle cx="-8" cy="6" r="9" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="9" fill="#ffb0a0"/><circle cx="3" cy="-10" r="9" fill="#ffb0a0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(350,1050)"><circle cx="10" cy="0" r="8" fill="#f7d154"/><circle cx="3" cy="10" r="8" fill="#f7d154"/><circle cx="-8" cy="6" r="8" fill="#f7d154"/><circle cx="-8" cy="-6" r="8" fill="#f7d154"/><circle cx="3" cy="-10" r="8" fill="#f7d154"/><circle cx="0" cy="0" r="6" fill="#fff"/></g>
+      <g transform="translate(920,1180)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(150,1320) scale(1.15)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(600,1450)"><circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/><circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/><circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/></g>
+      <g transform="translate(850,1620) scale(1.1)"><circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/><circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/><circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/></g>
+      <g transform="translate(300,1780)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+      <g transform="translate(700,1950) scale(1.15)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
+
+      <g transform="translate(220,220) rotate(-15)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
+      <g transform="translate(700,480) rotate(10) scale(0.85)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
+      <g transform="translate(400,1150) rotate(-8) scale(0.9)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
+      <g transform="translate(870,1750) rotate(5) scale(0.95)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
+    </svg>
+  </div>
+
   <div class="wrap">
     <div class="top-row">
       <button class="back-link" onclick="navigateTo('home-view')">← All services</button>
@@ -829,6 +838,50 @@
 
 <!-- ================= WINTER ================= -->
 <div id="winter-view" class="view">
+  <div class="home-bg">
+    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="winterGrad2" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#e8f4fb"/>
+          <stop offset="55%" stop-color="#eef6fb"/>
+          <stop offset="100%" stop-color="#dcecf6"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="1000" height="2200" fill="url(#winterGrad2)"/>
+
+      <path d="M40,40 Q140,90 240,40 T440,40 T640,40 T840,40 T1000,40" fill="none" stroke="#bcd6e6" stroke-width="3" opacity="0.8"/>
+      <circle cx="90" cy="60" r="7" fill="#ff6b6b"/><circle cx="180" cy="70" r="7" fill="#5bc27a"/>
+      <circle cx="270" cy="60" r="7" fill="#f7d154"/><circle cx="360" cy="70" r="7" fill="#6bb4ff"/>
+      <circle cx="450" cy="60" r="7" fill="#ff6b6b"/><circle cx="540" cy="70" r="7" fill="#5bc27a"/>
+      <circle cx="630" cy="60" r="7" fill="#f7d154"/><circle cx="720" cy="70" r="7" fill="#6bb4ff"/>
+      <circle cx="810" cy="60" r="7" fill="#ff6b6b"/><circle cx="900" cy="70" r="7" fill="#5bc27a"/>
+
+      <g stroke="#a9cfe8" stroke-width="4" stroke-linecap="round" opacity="0.9">
+        <g transform="translate(150,220)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(500,300) scale(0.7)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(850,260) scale(1.1)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(300,560)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(700,620) scale(1.2)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(950,900)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(100,900) scale(0.8)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(600,1080) scale(0.8)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(870,1330)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(200,1330) scale(0.9)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(650,1600) scale(1.1)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(940,1850) scale(0.75)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(150,1900)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+        <g transform="translate(610,2020)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
+      </g>
+
+      <g transform="translate(250,500)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
+      <g transform="translate(760,500)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
+      <g transform="translate(500,1000) scale(0.9)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#6bb4ff"/><circle cx="12" cy="0" r="3.5" fill="#ff6b6b"/><circle cx="-6" cy="28" r="3.5" fill="#f7d154"/><circle cx="10" cy="34" r="3.5" fill="#6bb4ff"/></g>
+      <g transform="translate(890,1120) scale(0.85)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#6bb4ff"/><circle cx="12" cy="0" r="3.5" fill="#ff6b6b"/><circle cx="-6" cy="28" r="3.5" fill="#f7d154"/><circle cx="10" cy="34" r="3.5" fill="#6bb4ff"/></g>
+      <g transform="translate(150,1600) scale(0.95)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
+      <g transform="translate(600,1750) scale(0.95)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
+    </svg>
+  </div>
+
   <div class="wrap">
     <div class="top-row">
       <button class="back-link" onclick="navigateTo('home-view')">← All services</button>
@@ -2491,40 +2544,11 @@ function confirmCancelBooking() {
 }
 
 /* ============================================================
-   LIGHT / DARK MODE
-   ============================================================ */
-const THEME_KEY = "lc.theme.v1";
-
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  document.getElementById('theme-toggle-btn').innerText = theme === 'dark' ? '☀️' : '🌙';
-}
-
-function toggleTheme() {
-  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-  const next = current === 'dark' ? 'light' : 'dark';
-  applyTheme(next);
-  try { localStorage.setItem(THEME_KEY, next); } catch (e) {}
-}
-
-function initTheme() {
-  let saved = null;
-  try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
-  if (saved === 'dark' || saved === 'light') {
-    applyTheme(saved);
-  } else {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    applyTheme(prefersDark ? 'dark' : 'light');
-  }
-}
-
-/* ============================================================
    INIT
    ============================================================ */
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeBookingModal();
 });
-initTheme();
 renderAccountWidget();
 checkForInviteInUrl();
 renderOfferings('springfall-offerings', SPRING_FALL_OFFERINGS, 'warm');
