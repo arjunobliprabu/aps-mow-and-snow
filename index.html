@@ -977,6 +977,7 @@
           Only one service can be paid for at a time right now. Please go back to your cart and remove all but one item before continuing.
         </div>
         <button class="pill-btn full-btn" type="button" id="pay-btn" onclick="handlePay()"><span id="pay-btn-label">Pay</span> <span id="pay-btn-amount">$0</span></button>
+        <button class="pill-btn full-btn" type="button" style="background:#3D95CE;margin-top:10px;" onclick="openVenmoPayModal()">Pay with Venmo?</button>
         <p class="fine-print">You'll be taken to Stripe's secure checkout to complete payment (test mode).</p>
       </div>
     </div>
@@ -1232,6 +1233,25 @@
     <p class="modal-sub">Copy this link and send it to <span id="invite-link-name"></span> yourself — the app can't email it for you.</p>
     <input class="form-input" id="invite-link-box" type="text" readonly style="text-align:center;font-size:0.8rem;">
     <button class="pill-btn full-btn" type="button" onclick="copyInviteLink()">Copy Link</button>
+  </div>
+</div>
+
+<!-- ================= CUSTOMER PAY WITH VENMO MODAL ================= -->
+<div class="modal-overlay" id="customer-venmo-modal" onclick="if(event.target===this) closeVenmoPayModal();">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeVenmoPayModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;">Pay with Venmo</h2>
+    <!-- PLACEHOLDER: replace "ap-mow-and-snow" below (in both the link and
+         the displayed @handle) with your real Venmo username once you send it. -->
+    <p class="modal-sub">Send <strong id="venmo-owner-amount">$0</strong> to our Venmo:</p>
+    <p class="font-display" style="font-size:1.6rem;margin:6px 0 18px 0;">
+      <a id="venmo-owner-link" href="https://venmo.com/u/ap-mow-and-snow" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">@ap-mow-and-snow</a>
+    </p>
+    <label class="form-label" for="customer-venmo-handle">Your Venmo username</label>
+    <input class="form-input" id="customer-venmo-handle" type="text" placeholder="@your-venmo">
+    <p id="customer-venmo-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
+    <button class="pill-btn full-btn" style="background:#3D95CE;" type="button" onclick="submitVenmoPayment()">I've Sent the Payment</button>
+    <p class="signin-note" style="margin-top:12px;">We'll confirm your payment manually and follow up to finalize your booking.</p>
   </div>
 </div>
 
@@ -2041,6 +2061,46 @@ const SERVICE_STRIPE_LINKS = {
   "Lawn mowing — front yard": "https://buy.stripe.com/test_8x228k4B80fD6dq1fg0gw0a",
   "Lawn mowing — back yard": "https://buy.stripe.com/test_28E4gs7Nk5zXgS49LM0gw0b"
 };
+
+function openVenmoPayModal() {
+  const email = getCurrentUser();
+  const cart = getCart().filter(c => c.email === email);
+  if (cart.length === 0) return;
+  document.getElementById('venmo-owner-amount').innerText = `$${cart[0].price}`;
+  document.getElementById('customer-venmo-handle').value = '';
+  document.getElementById('customer-venmo-error').style.display = 'none';
+  document.getElementById('customer-venmo-modal').classList.add('active');
+}
+function closeVenmoPayModal() {
+  document.getElementById('customer-venmo-modal').classList.remove('active');
+}
+function submitVenmoPayment() {
+  const handle = document.getElementById('customer-venmo-handle').value.trim();
+  const errorEl = document.getElementById('customer-venmo-error');
+  if (!handle) {
+    errorEl.innerText = 'Please enter your Venmo username so we can confirm the payment.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  closeVenmoPayModal();
+
+  // Same stacking logic as the Stripe flow: confirm just the item that was
+  // being paid, then either move on to the next one in the cart or, if
+  // that was the last one, show the final confirmation.
+  const paidItem = confirmNextCartItemAsBooking();
+  if (!paidItem) return;
+
+  const email = getCurrentUser();
+  const stillPending = getCart().filter(c => c.email === email);
+  if (stillPending.length > 0) {
+    renderCheckout();
+    showToast(`Thanks! We'll confirm your Venmo payment from ${handle} for ${paidItem.serviceName}. ${stillPending.length} more service${stillPending.length > 1 ? 's' : ''} to go — pay for the next one below.`);
+  } else {
+    renderConfirmation();
+    navigateTo('confirmation-view');
+    showToast(`Thanks! We'll confirm your Venmo payment from ${handle} and follow up to finalize your booking.`);
+  }
+}
 
 function handlePay() {
   const email = getCurrentUser();
