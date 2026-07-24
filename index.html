@@ -1162,6 +1162,10 @@ function submitSignIn() {
       showAuthError("Your invite hasn't been set up yet — please use the invite link you were sent to create your password first.");
       return;
     }
+    if (employee.status === 'awaiting_approval') {
+      showAuthError("Your account is still waiting on admin approval. Please check back once it's been accepted.");
+      return;
+    }
     if (employee.password !== password) {
       showAuthError("Incorrect password.");
       return;
@@ -1273,12 +1277,14 @@ function submitProviderSignUp() {
   const employees = getEmployees();
   employees.push({
     firstName, lastName, email,
-    status: 'active',
+    status: 'awaiting_approval',
     inviteToken: generateInviteToken(),
     password
   });
   saveEmployees(employees);
-  finishSignIn(email);
+
+  closeSignInModal();
+  showToast(`Thanks, ${firstName}! Your account is waiting on admin approval before you can sign in.`);
 }
 
 function finishSignIn(email) {
@@ -1891,6 +1897,16 @@ function declineJobRequest(bookingId, providerEmail) {
   showToast(`Declined request from ${providerEmail}`);
 }
 
+function approveServiceProvider(email) {
+  const employees = getEmployees();
+  const emp = employees.find(e => e.email.toLowerCase() === email.toLowerCase());
+  if (!emp) return;
+  emp.status = 'active';
+  saveEmployees(employees);
+  renderAdminEmployeesList();
+  showToast(`Approved ${emp.firstName} ${emp.lastName} — they can now sign in.`);
+}
+
 function renderAdminEmployeesList() {
   const list = document.getElementById('admin-employees-list');
   const employees = getEmployees();
@@ -1898,18 +1914,24 @@ function renderAdminEmployeesList() {
     list.innerHTML = '<p style="color:var(--muted-foreground);">No service providers added yet.</p>';
     return;
   }
-  list.innerHTML = employees.map(e => `
+  list.innerHTML = employees.map(e => {
+    let statusLabel = 'Active';
+    if (e.status === 'pending') statusLabel = 'Invite pending';
+    if (e.status === 'awaiting_approval') statusLabel = 'Awaiting your approval';
+    return `
     <div class="appt-row">
       <div>
         <p style="margin:0;font-weight:500;">${e.firstName} ${e.lastName}</p>
-        <p class="meta">${e.email} — ${e.status === 'active' ? 'Active' : 'Invite pending'}</p>
+        <p class="meta">${e.email} — ${statusLabel}</p>
       </div>
       <div style="text-align:right;display:flex;gap:8px;align-items:center;">
         ${e.status === 'pending' ? `<button class="add-btn" onclick="showInviteLink('${e.email.replace(/'/g, "\\'")}')">Copy Invite Link</button>` : ''}
-        <button class="remove-btn" onclick="openDeleteEmployeeModal('${e.email.replace(/'/g, "\\'")}')">Remove</button>
+        ${e.status === 'awaiting_approval' ? `<button class="add-btn" onclick="approveServiceProvider('${e.email.replace(/'/g, "\\'")}')">Approve</button>` : ''}
+        <button class="remove-btn" onclick="openDeleteEmployeeModal('${e.email.replace(/'/g, "\\'")}')">${e.status === 'awaiting_approval' ? 'Decline' : 'Remove'}</button>
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 /* ============================================================
