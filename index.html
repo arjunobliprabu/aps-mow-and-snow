@@ -1823,8 +1823,13 @@ function renderAdminDashboard() {
   const accounts = getAccounts();
 
   document.getElementById('admin-stat-bookings').innerText = bookings.length;
-  const revenue = bookings.reduce((sum, b) => sum + b.price, 0);
-  document.getElementById('admin-stat-revenue').innerText = `$${revenue}`;
+  // Total revenue = what the admin actually keeps. A job done in-house (no
+  // service provider assigned) counts in full; a job handed off to a
+  // provider only counts the admin's 35% cut, since the provider keeps 65%.
+  const revenue = bookings.reduce((sum, b) => {
+    return sum + (b.assignedProviderEmail ? splitJobPrice(b.price).adminCut : b.price);
+  }, 0);
+  document.getElementById('admin-stat-revenue').innerText = `$${revenue.toFixed(2)}`;
 
   const bookingsList = document.getElementById('admin-bookings-list');
   if (bookings.length === 0) {
@@ -1832,10 +1837,13 @@ function renderAdminDashboard() {
   } else {
     bookingsList.innerHTML = bookings.map(b => {
       let statusNote = '';
-      if (b.completed) {
-        statusNote = ` — ✓ completed by ${b.assignedProviderEmail}`;
-      } else if (b.assignedProviderEmail) {
-        statusNote = ` — assigned to ${b.assignedProviderEmail}`;
+      let priceLabel = `$${b.price}`;
+      if (b.assignedProviderEmail) {
+        const { adminCut } = splitJobPrice(b.price);
+        priceLabel = `$${adminCut.toFixed(2)} <span style="font-weight:400;color:var(--muted-foreground);font-size:0.75rem;">(your 35% of $${b.price})</span>`;
+        statusNote = b.completed
+          ? ` — ✓ completed by ${b.assignedProviderEmail}`
+          : ` — assigned to ${b.assignedProviderEmail}`;
       }
       return `
       <div class="appt-row">
@@ -1844,7 +1852,7 @@ function renderAdminDashboard() {
           <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}${statusNote}</p>
         </div>
         <div style="text-align:right;">
-          <p style="font-weight:500;margin:0 0 6px 0;">$${b.price}</p>
+          <p style="font-weight:500;margin:0 0 6px 0;">${priceLabel}</p>
           <button class="remove-btn" onclick="openCancelBookingModal('${b.id}')">Cancel</button>
         </div>
       </div>
