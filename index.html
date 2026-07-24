@@ -41,6 +41,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 
+<!-- Leaflet: free, open-source map library used for the job location maps
+     on the Admin and Service Provider dashboards. -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <style>
   :root {
     --radius: 0.75rem;
@@ -473,6 +478,20 @@
     margin-bottom: 10px;
   }
   .appt-row .meta { font-size: 0.85rem; color: var(--muted-foreground); font-family:'Inter',sans-serif; font-style:normal; }
+
+  /* Job location maps */
+  .job-map {
+    width: 100%;
+    height: 320px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    margin-top: 16px;
+    z-index: 0;
+  }
+  .job-map-note { font-size: 0.8rem; color: var(--muted-foreground); margin-top: 8px; }
+  .appt-row.clickable-job { cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease; }
+  .appt-row.clickable-job:hover { background: var(--secondary); }
+  .appt-row.clickable-job.job-selected { border-color: var(--primary); background: var(--secondary); }
 
   /* Account widget */
   .account-widget {
@@ -1030,6 +1049,13 @@
     <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Admin Dashboard</h1>
 
     <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Job locations</h2>
+      <p class="signin-note" style="margin-top:8px;">Click a job below to highlight its location on the map.</p>
+      <div id="admin-map" class="job-map"></div>
+      <p class="job-map-note" id="admin-map-note"></p>
+    </section>
+
+    <section style="margin-top:40px;">
       <div class="checkout-grid" style="margin-top:0;">
         <div class="panel" style="text-align:center;">
           <p class="eyebrow" style="margin:0;">Total bookings</p>
@@ -1084,6 +1110,13 @@
         <p class="eyebrow" style="margin:0;">Total earned</p>
         <p class="font-display" style="font-size:2.4rem;margin:6px 0 0 0;" id="employee-total-earned">$0.00</p>
       </div>
+    </section>
+
+    <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Job locations</h2>
+      <p class="signin-note" style="margin-top:8px;">Click a job below to highlight its location on the map.</p>
+      <div id="worker-map" class="job-map"></div>
+      <p class="job-map-note" id="worker-map-note"></p>
     </section>
 
     <section style="margin-top:40px;">
@@ -1336,6 +1369,54 @@ function isEmployeeEmail(email) {
 }
 function generateInviteToken() {
   return 'inv_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+/* ============================================================
+   GEOCODING (address -> map coordinates)
+   ============================================================
+   Uses OpenStreetMap's free Nominatim service — no API key needed.
+   Results are cached on the customer's account (address.lat/lng) so we
+   only ever look up a given address once. Requests are sent one at a
+   time with a short delay between them, out of respect for Nominatim's
+   fair-use rate limits.
+*/
+async function geocodeAddress(address) {
+  const query = `${address.street}, ${address.city}, ${address.state} ${address.zip}`;
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(query)}`;
+  try {
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const data = await res.json();
+    if (data && data[0]) {
+      return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+    }
+  } catch (e) {
+    console.warn('Geocoding failed for', query, e);
+  }
+  return null;
+}
+
+async function ensureBookingLocationsGeocoded(bookings) {
+  const accounts = getAccounts();
+  const seenEmails = new Set();
+  const toGeocode = [];
+
+  bookings.forEach(b => {
+    if (seenEmails.has(b.email)) return;
+    seenEmails.add(b.email);
+    const acc = accounts.find(a => a.email === b.email);
+    if (acc && acc.address && (acc.address.lat === undefined || acc.address.lng === undefined)) {
+      toGeocode.push(acc);
+    }
+  });
+
+  for (const acc of toGeocode) {
+    const coords = await geocodeAddress(acc.address);
+    acc.address.lat = coords ? coords.lat : null;
+    acc.address.lng = coords ? coords.lng : null;
+    await new Promise(r => setTimeout(r, 1100)); // stay within Nominatim's fair-use rate limit
+  }
+
+  if (toGeocode.length > 0) saveAccounts(accounts);
 }
 
 // Revenue split once a job is assigned to a service provider: they get 85%,
@@ -2240,6 +2321,82 @@ function ensureBookingIds() {
   if (changed) writeStore(BOOKINGS_KEY, patched);
 }
 
+/* ============================================================
+   ADMIN JOB LOCATIONS MAP
+   ============================================================ */
+let adminMapInstance = null;
+let adminMapMarkers = {};
+let selectedAdminJobId = null;
+
+async function renderAdminMap() {
+  const noteEl = document.getElementById('admin-map-note');
+  const mapEl = document.getElementById('admin-map');
+  const bookings = getBookings();
+
+  if (typeof L === 'undefined') {
+    noteEl.innerText = 'Map failed to load — check your internet connection and refresh.';
+    return;
+  }
+
+  if (bookings.length === 0) {
+    noteEl.innerText = 'No bookings yet.';
+    return;
+  }
+
+  noteEl.innerText = 'Loading locations…';
+  await ensureBookingLocationsGeocoded(bookings);
+
+  if (!adminMapInstance) {
+    adminMapInstance = L.map('admin-map');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(adminMapInstance);
+  }
+
+  Object.values(adminMapMarkers).forEach(m => adminMapInstance.removeLayer(m));
+  adminMapMarkers = {};
+
+  const accounts = getAccounts();
+  const points = [];
+  bookings.forEach(b => {
+    const acc = accounts.find(a => a.email === b.email);
+    if (acc && acc.address && acc.address.lat != null && acc.address.lng != null) {
+      const marker = L.marker([acc.address.lat, acc.address.lng]).addTo(adminMapInstance);
+      marker.bindPopup(`<strong>${b.serviceName}</strong><br>${prettyDate(b.dateISO)} · ${b.time}<br>${b.email}`);
+      marker.on('click', () => highlightAdminJob(b.id));
+      adminMapMarkers[b.id] = marker;
+      points.push([acc.address.lat, acc.address.lng]);
+    }
+  });
+
+  setTimeout(() => adminMapInstance.invalidateSize(), 50);
+
+  if (points.length > 0) {
+    adminMapInstance.fitBounds(points, { padding: [30, 30], maxZoom: 13 });
+    noteEl.innerText = `${points.length} job location${points.length > 1 ? 's' : ''} shown.`;
+  } else {
+    adminMapInstance.setView([40.0583, -74.4057], 8); // New Jersey, fallback view
+    noteEl.innerText = 'No mappable addresses yet.';
+  }
+}
+
+function highlightAdminJob(bookingId) {
+  document.querySelectorAll('#admin-bookings-list .appt-row').forEach(el => el.classList.remove('job-selected'));
+  const rowEl = document.getElementById(`admin-job-row-${bookingId}`);
+  if (rowEl) {
+    rowEl.classList.add('job-selected');
+    if (rowEl.scrollIntoView) rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  selectedAdminJobId = bookingId;
+
+  const marker = adminMapMarkers[bookingId];
+  if (marker && adminMapInstance) {
+    adminMapInstance.setView(marker.getLatLng(), 14, { animate: true });
+    marker.openPopup();
+  }
+}
+
 function renderAdminDashboard() {
   ensureBookingIds();
   const bookings = getBookings().slice().sort((a, b) => (a.dateISO + a.time).localeCompare(b.dateISO + b.time));
@@ -2269,18 +2426,20 @@ function renderAdminDashboard() {
           : ` — assigned to ${b.assignedProviderEmail}`;
       }
       return `
-      <div class="appt-row">
+      <div class="appt-row clickable-job" id="admin-job-row-${b.id}" onclick="highlightAdminJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
           <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}${statusNote}</p>
         </div>
         <div style="text-align:right;">
           <p style="font-weight:500;margin:0 0 6px 0;">${priceLabel}</p>
-          <button class="remove-btn" onclick="openCancelBookingModal('${b.id}')">Cancel</button>
+          <button class="remove-btn" onclick="event.stopPropagation(); openCancelBookingModal('${b.id}')">Cancel</button>
         </div>
       </div>
     `;
     }).join('');
+
+    if (selectedAdminJobId) highlightAdminJob(selectedAdminJobId);
   }
 
   renderAdminJobRequests(bookings);
@@ -2555,6 +2714,80 @@ function submitEmployeeSetup() {
   showToast(`Welcome aboard, ${emp.firstName}!`);
 }
 
+/* ============================================================
+   WORKER JOB LOCATIONS MAP
+   ============================================================ */
+let workerMapInstance = null;
+let workerMapMarkers = {};
+let selectedWorkerJobId = null;
+
+async function renderWorkerMap(relevantBookings) {
+  const noteEl = document.getElementById('worker-map-note');
+
+  if (typeof L === 'undefined') {
+    noteEl.innerText = 'Map failed to load — check your internet connection and refresh.';
+    return;
+  }
+
+  if (relevantBookings.length === 0) {
+    noteEl.innerText = 'No job locations to show right now.';
+    return;
+  }
+
+  noteEl.innerText = 'Loading locations…';
+  await ensureBookingLocationsGeocoded(relevantBookings);
+
+  if (!workerMapInstance) {
+    workerMapInstance = L.map('worker-map');
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+      maxZoom: 19
+    }).addTo(workerMapInstance);
+  }
+
+  Object.values(workerMapMarkers).forEach(m => workerMapInstance.removeLayer(m));
+  workerMapMarkers = {};
+
+  const accounts = getAccounts();
+  const points = [];
+  relevantBookings.forEach(b => {
+    const acc = accounts.find(a => a.email === b.email);
+    if (acc && acc.address && acc.address.lat != null && acc.address.lng != null) {
+      const marker = L.marker([acc.address.lat, acc.address.lng]).addTo(workerMapInstance);
+      marker.bindPopup(`<strong>${b.serviceName}</strong><br>${prettyDate(b.dateISO)} · ${b.time}`);
+      marker.on('click', () => highlightWorkerJob(b.id));
+      workerMapMarkers[b.id] = marker;
+      points.push([acc.address.lat, acc.address.lng]);
+    }
+  });
+
+  setTimeout(() => workerMapInstance.invalidateSize(), 50);
+
+  if (points.length > 0) {
+    workerMapInstance.fitBounds(points, { padding: [30, 30], maxZoom: 13 });
+    noteEl.innerText = `${points.length} job location${points.length > 1 ? 's' : ''} shown.`;
+  } else {
+    workerMapInstance.setView([40.0583, -74.4057], 8); // New Jersey, fallback view
+    noteEl.innerText = 'No mappable addresses yet.';
+  }
+}
+
+function highlightWorkerJob(bookingId) {
+  document.querySelectorAll('#employee-open-jobs-list .appt-row, #employee-active-jobs-list .appt-row').forEach(el => el.classList.remove('job-selected'));
+  const rowEl = document.getElementById(`worker-job-row-${bookingId}`);
+  if (rowEl) {
+    rowEl.classList.add('job-selected');
+    if (rowEl.scrollIntoView) rowEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  selectedWorkerJobId = bookingId;
+
+  const marker = workerMapMarkers[bookingId];
+  if (marker && workerMapInstance) {
+    workerMapInstance.setView(marker.getLatLng(), 14, { animate: true });
+    marker.openPopup();
+  }
+}
+
 function renderEmployeeDashboard() {
   ensureBookingIds();
   const email = getCurrentUser();
@@ -2573,14 +2806,14 @@ function renderEmployeeDashboard() {
       const alreadyRequested = (b.jobRequests || []).includes(email);
       const { providerCut } = splitJobPrice(b.price);
       return `
-      <div class="appt-row">
+      <div class="appt-row clickable-job" id="worker-job-row-${b.id}" onclick="highlightWorkerJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
           <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you'd earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
         </div>
         ${alreadyRequested
           ? `<span class="meta" style="font-weight:600;">Requested — awaiting approval</span>`
-          : `<button class="add-btn" onclick="requestJob('${b.id}')">Request this Job</button>`
+          : `<button class="add-btn" onclick="event.stopPropagation(); requestJob('${b.id}')">Request this Job</button>`
         }
       </div>
     `;
@@ -2596,16 +2829,19 @@ function renderEmployeeDashboard() {
     myList.innerHTML = myJobs.map(b => {
       const { providerCut } = splitJobPrice(b.price);
       return `
-      <div class="appt-row">
+      <div class="appt-row clickable-job" id="worker-job-row-${b.id}" onclick="highlightWorkerJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
           <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
         </div>
-        <button class="add-btn" onclick="markJobComplete('${b.id}')">Mark Completed</button>
+        <button class="add-btn" onclick="event.stopPropagation(); markJobComplete('${b.id}')">Mark Completed</button>
       </div>
     `;
     }).join('');
   }
+
+  renderWorkerMap([...openJobs, ...myJobs]);
+  if (selectedWorkerJobId) highlightWorkerJob(selectedWorkerJobId);
 
   // Total actually earned from jobs marked completed.
   const completedJobs = bookings.filter(b => b.assignedProviderEmail === email && b.completed);
@@ -2725,6 +2961,13 @@ navigateTo = function(viewId) {
   origNavigateTo(viewId);
   if (viewId === 'cart-view') renderCart();
   if (viewId === 'confirmation-view') renderConfirmation();
+  if (viewId === 'admin-view') renderAdminMap();
+  if (viewId === 'employee-view') {
+    const email = getCurrentUser();
+    const bookings = getBookings();
+    const relevant = bookings.filter(b => (!b.assignedProviderEmail && !b.completed) || b.assignedProviderEmail === email);
+    renderWorkerMap(relevant);
+  }
 };
 </script>
 </body>
