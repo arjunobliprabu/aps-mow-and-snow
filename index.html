@@ -1690,6 +1690,29 @@ function confirmCartAsBookings() {
   writeStore(CART_KEY, others);
   return newBookings;
 }
+
+// Confirms just the FIRST cart item belonging to the current customer,
+// leaving the rest of their cart untouched. Used for stacked / sequential
+// checkout, where each service in the cart gets its own real Stripe payment
+// one at a time.
+function confirmNextCartItemAsBooking() {
+  const email = getCurrentUser();
+  const cart = getCart();
+  const mineIndex = cart.findIndex(c => c.email === email);
+  if (mineIndex === -1) return null;
+
+  const item = cart[mineIndex];
+  const newBooking = {
+    ...item,
+    assignedProviderEmail: null,
+    jobRequests: [],
+    completed: false
+  };
+  writeStore(BOOKINGS_KEY, [...getBookings(), newBooking]);
+  cart.splice(mineIndex, 1);
+  writeStore(CART_KEY, cart);
+  return newBooking;
+}
 function formatDateISO(y, m, d) {
   return `${y}-${String(m + 1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
@@ -1955,31 +1978,41 @@ function renderCheckout() {
   const recap = document.getElementById('checkout-recap');
   recap.innerHTML = '';
   let total = 0;
-  cart.forEach(item => {
+  cart.forEach((item, idx) => {
     total += item.price;
     const row = document.createElement('div');
     row.className = 'recap-row';
+    const tag = idx === 0
+      ? `<span style="color:var(--primary);font-weight:600;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;">Paying now</span>`
+      : `<span class="meta" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;">Up next</span>`;
     row.innerHTML = `
       <div>
         <p style="margin:0;font-weight:500;">${item.serviceName}</p>
         <p class="meta" style="margin:2px 0 0 0;">${prettyDate(item.dateISO)} · ${item.time}</p>
+        <div style="margin-top:4px;">${tag}</div>
       </div>
       <span>$${item.price}</span>
     `;
     recap.appendChild(row);
   });
   document.getElementById('checkout-total').innerText = `$${total}`;
-  document.getElementById('pay-btn-amount').innerText = `$${total}`;
+
+  // The Pay button only ever charges the NEXT item in line — multiple
+  // services are paid one real Stripe transaction at a time.
+  document.getElementById('pay-btn-amount').innerText = `$${cart[0].price}`;
 
   const warningEl = document.getElementById('checkout-multi-warning');
-  const payBtn = document.getElementById('pay-btn');
   if (cart.length > 1) {
     warningEl.style.display = 'block';
-    payBtn.disabled = true;
+    warningEl.style.background = 'var(--secondary)';
+    warningEl.style.color = 'var(--foreground)';
+    warningEl.style.borderColor = 'var(--border)';
+    warningEl.innerHTML = `You have <strong>${cart.length} services</strong> in this order. Stripe only charges one at a time, so you'll pay for "<strong>${cart[0].serviceName}</strong>" ($${cart[0].price}) now, then come right back here to pay for the rest.`;
   } else {
     warningEl.style.display = 'none';
-    payBtn.disabled = false;
   }
+
+  document.getElementById('pay-btn').disabled = false;
 }
 
 // Real Stripe test-mode Payment Links, one per exact service and price —
@@ -1988,14 +2021,14 @@ function renderCheckout() {
 // Stripe Dashboard, each of these links' "After payment" redirect must be
 // set to:
 //   https://arjunobliprabu.github.io/lawn-snow-care-app/?stripe_success=1
-// so the app knows to turn the cart into a confirmed booking when the
-// customer comes back. Known limitations:
-// 1) Without a backend to verify the payment server-side, this app trusts
-//    that redirect — it can't cryptographically confirm the charge actually
-//    happened the way a real backend + webhook setup would.
-// 2) Since each link is single-price, checkout only supports ONE service at
-//    a time — a cart with more than one item can't be combined into a
-//    single accurate Stripe charge without a real backend.
+// so the app knows to confirm a booking and move to the next payment when
+// the customer comes back. Multiple services in one cart are supported by
+// "stacking" — the customer pays for them one at a time, each as its own
+// real Stripe transaction, automatically continuing until the cart is
+// empty. Known limitation: without a backend to verify payment
+// server-side, this app trusts the redirect back from Stripe — it can't
+// cryptographically confirm the charge actually happened the way a real
+// backend + webhook setup would.
 const SERVICE_STRIPE_LINKS = {
   "Seasonal snow plan": "https://buy.stripe.com/test_5kQ9AMgjQ2nL9pCcXY0gw02",
   "Car cleaning (snow)": "https://buy.stripe.com/test_14A3cogjQ7I559mbTU0gw03",
@@ -2012,15 +2045,9 @@ const SERVICE_STRIPE_LINKS = {
 function handlePay() {
   const email = getCurrentUser();
   const cart = getCart().filter(c => c.email === email);
-
   if (cart.length === 0) return;
 
-  if (cart.length > 1) {
-    showToast('Please check out one service at a time — remove extra items from your cart first.');
-    return;
-  }
-
-  const item = cart[0];
+  const item = cart[0]; // always pay for the next item in line
   const link = SERVICE_STRIPE_LINKS[item.serviceName];
   if (!link) {
     showToast(`No payment link is set up yet for "${item.serviceName}".`);
@@ -2037,22 +2064,32 @@ function handlePay() {
 }
 
 // Called on page load. If Stripe just redirected the customer back here
-// after a successful payment, finish the checkout for them.
+// after a successful payment, confirm that one service and, if there are
+// more services still waiting in the cart, bring the customer right back
+// to checkout to pay for the next one — real stacked payments, one Stripe
+// transaction per service.
 function checkForStripeReturn() {
   const params = new URLSearchParams(location.search);
   if (params.get('stripe_success') !== '1') return;
 
   const email = getCurrentUser();
-  const cart = getCart().filter(c => c.email === email);
-  if (cart.length === 0) return; // nothing pending, or already processed
+  const pendingBefore = getCart().filter(c => c.email === email);
+  if (pendingBefore.length === 0) return; // nothing pending, or already processed
 
-  confirmCartAsBookings();
-  renderConfirmation();
-  navigateTo('confirmation-view');
-  showToast('Payment successful — booking confirmed!');
-
-  // Clean the URL so refreshing doesn't re-trigger this.
+  const paidItem = confirmNextCartItemAsBooking();
   history.replaceState({}, document.title, location.pathname);
+  if (!paidItem) return;
+
+  const stillPending = getCart().filter(c => c.email === email);
+  if (stillPending.length > 0) {
+    navigateTo('checkout-view');
+    renderCheckout();
+    showToast(`Paid for ${paidItem.serviceName}! ${stillPending.length} more service${stillPending.length > 1 ? 's' : ''} to go — click Pay to continue.`);
+  } else {
+    renderConfirmation();
+    navigateTo('confirmation-view');
+    showToast('All payments complete — booking confirmed!');
+  }
 }
 
 /* ============================================================
