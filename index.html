@@ -784,6 +784,12 @@
     </section>
 
     <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Job requests</h2>
+      <p class="signin-note" style="margin-top:8px;">Service providers requesting to work a job show up here — approve one to assign them.</p>
+      <div id="admin-job-requests-list" style="margin-top:16px;"></div>
+    </section>
+
+    <section style="margin-top:40px;">
       <h2 class="font-display" style="font-size:1.6rem;">All bookings</h2>
       <div id="admin-bookings-list" style="margin-top:16px;"></div>
     </section>
@@ -795,8 +801,8 @@
 
     <section style="margin-top:40px;">
       <div class="top-row">
-        <h2 class="font-display" style="font-size:1.6rem;margin:0;">Employees</h2>
-        <button class="add-btn" onclick="openAddEmployeeModal()">+ Add Employee</button>
+        <h2 class="font-display" style="font-size:1.6rem;margin:0;">Service Providers</h2>
+        <button class="add-btn" onclick="openAddEmployeeModal()">+ Add Service Provider</button>
       </div>
       <p class="signin-note" style="margin-top:8px;">This app can't send real emails on its own — after you add someone, copy their invite link and send it to them yourself (text, email, whatever's easiest).</p>
       <div id="admin-employees-list" style="margin-top:16px;"></div>
@@ -804,19 +810,25 @@
   </div>
 </div>
 
-<!-- ================= EMPLOYEE DASHBOARD ================= -->
+<!-- ================= WORKER DASHBOARD ================= -->
 <div id="employee-view" class="view">
   <div class="wrap-wide">
     <div class="top-row">
       <button class="back-link" onclick="navigateTo('home-view')">← Back to site</button>
-      <span class="eyebrow" style="margin:0;">Signed in as employee</span>
+      <span class="eyebrow" style="margin:0;">Signed in as service provider</span>
     </div>
     <h1 class="big-title font-display" style="font-size:clamp(2.5rem,6vw,4.2rem);">Hi, <span id="employee-dashboard-name"></span></h1>
-    <p class="subtitle" style="max-width:520px;">Here's the full job schedule, so you know what's coming up.</p>
+    <p class="subtitle" style="max-width:520px;">Request open jobs, then check back here to see what you've been approved for.</p>
 
     <section style="margin-top:40px;">
-      <h2 class="font-display" style="font-size:1.6rem;">Upcoming jobs</h2>
-      <div id="employee-jobs-list" style="margin-top:16px;"></div>
+      <h2 class="font-display" style="font-size:1.6rem;">Open job requests</h2>
+      <p class="signin-note" style="margin-top:8px;">Request a job below — the admin will need to approve it before it's yours.</p>
+      <div id="employee-open-jobs-list" style="margin-top:16px;"></div>
+    </section>
+
+    <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">My active jobs</h2>
+      <div id="employee-active-jobs-list" style="margin-top:16px;"></div>
     </section>
   </div>
 </div>
@@ -859,6 +871,13 @@
 
     <label class="form-label" for="signin-password">Password</label>
     <input class="form-input" id="signin-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){event.preventDefault();submitAuth();}">
+
+    <div id="provider-signup-fields" style="display:none;">
+      <label class="form-label" for="provider-first-name">First name</label>
+      <input class="form-input" id="provider-first-name" type="text" placeholder="Sam">
+      <label class="form-label" for="provider-last-name">Last name</label>
+      <input class="form-input" id="provider-last-name" type="text" placeholder="Rivera">
+    </div>
 
     <div id="signup-only-fields" style="display:none;">
       <label class="form-label" for="signup-street">Street Address</label>
@@ -921,7 +940,7 @@
 <div class="modal-overlay" id="add-employee-modal" onclick="if(event.target===this) closeAddEmployeeModal();">
   <div class="modal-box" style="max-width:380px;">
     <button class="modal-close-btn" onclick="closeAddEmployeeModal()" title="Close">✕</button>
-    <h2 class="modal-title font-display">Add Employee</h2>
+    <h2 class="modal-title font-display">Add Service Provider</h2>
     <p class="modal-sub">Enter their info — you'll get a personal invite link to send them.</p>
 
     <label class="form-label" for="emp-first-name">First name</label>
@@ -952,7 +971,7 @@
 <div class="modal-overlay" id="employee-setup-modal">
   <div class="modal-box" style="max-width:380px;">
     <h2 class="modal-title font-display">Welcome, <span id="employee-setup-name"></span></h2>
-    <p class="modal-sub">You've been invited to join as an employee. Set a password to finish creating your account.</p>
+    <p class="modal-sub">You've been invited to join as a service provider. Set a password to finish creating your account.</p>
 
     <label class="form-label" for="employee-setup-password">Choose a password</label>
     <input class="form-input" id="employee-setup-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter'){event.preventDefault();submitEmployeeSetup();}">
@@ -1046,9 +1065,21 @@ function logoutUser() {
 
 let pendingSignInAction = null;
 let authMode = 'signin'; // 'signin' | 'signup'
+let authRole = 'customer'; // 'customer' | 'provider'
 
-function openSignInModal(onSuccess) {
+function toggleSignInRolePicker() {
+  const menu = document.getElementById('signin-role-menu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function chooseSignInRole(role) {
+  const menu = document.getElementById('signin-role-menu');
+  if (menu) menu.style.display = 'none';
+  openSignInModal(null, role);
+}
+
+function openSignInModal(onSuccess, role) {
   pendingSignInAction = onSuccess || null;
+  authRole = role || 'customer';
   authMode = 'signin';
   applyAuthMode();
   document.getElementById('signin-email').value = '';
@@ -1057,6 +1088,8 @@ function openSignInModal(onSuccess) {
   document.getElementById('signup-city').value = '';
   document.getElementById('signup-state').value = '';
   document.getElementById('signup-zip').value = '';
+  document.getElementById('provider-first-name').value = '';
+  document.getElementById('provider-last-name').value = '';
   document.getElementById('signin-error').style.display = 'none';
   document.getElementById('signin-modal').classList.add('active');
 }
@@ -1071,11 +1104,15 @@ function toggleAuthMode() {
 }
 function applyAuthMode() {
   const isSignup = authMode === 'signup';
-  document.getElementById('auth-title').innerText = isSignup ? 'Sign Up' : 'Sign In';
+  const isProvider = authRole === 'provider';
+  document.getElementById('auth-title').innerText = isProvider
+    ? (isSignup ? 'Sign Up — Service Provider' : 'Sign In — Service Provider')
+    : (isSignup ? 'Sign Up' : 'Sign In');
   document.getElementById('auth-sub').innerText = isSignup
     ? 'Create an account with an email and password.'
     : 'Enter your email and password to continue.';
-  document.getElementById('signup-only-fields').style.display = isSignup ? 'block' : 'none';
+  document.getElementById('signup-only-fields').style.display = (isSignup && !isProvider) ? 'block' : 'none';
+  document.getElementById('provider-signup-fields').style.display = (isSignup && isProvider) ? 'block' : 'none';
   document.getElementById('auth-submit-btn').innerText = isSignup ? 'Create Account' : 'Sign In';
   document.getElementById('auth-toggle-prompt').innerText = isSignup ? 'Already have an account?' : "Don't have an account?";
   document.getElementById('auth-toggle-link').innerText = isSignup ? 'Sign in' : 'Sign up';
@@ -1147,6 +1184,11 @@ function submitSignIn() {
 }
 
 function submitSignUp() {
+  if (authRole === 'provider') {
+    submitProviderSignUp();
+    return;
+  }
+
   const email = document.getElementById('signin-email').value.trim();
   const password = document.getElementById('signin-password').value;
   const street = document.getElementById('signup-street').value.trim();
@@ -1163,7 +1205,7 @@ function submitSignUp() {
     return;
   }
   if (findEmployee(email)) {
-    showAuthError("That email belongs to an employee account. Please use a different one.");
+    showAuthError("That email belongs to a service provider account. Please use a different one.");
     return;
   }
   if (!password || password.length < 6) {
@@ -1197,6 +1239,48 @@ function submitSignUp() {
   finishSignIn(email);
 }
 
+function submitProviderSignUp() {
+  const firstName = document.getElementById('provider-first-name').value.trim();
+  const lastName = document.getElementById('provider-last-name').value.trim();
+  const email = document.getElementById('signin-email').value.trim();
+  const password = document.getElementById('signin-password').value;
+
+  if (!firstName || !lastName) {
+    showAuthError("Please enter both a first and last name.");
+    return;
+  }
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    showAuthError("Please enter a valid email.");
+    return;
+  }
+  if (isAdminEmail(email)) {
+    showAuthError("That email is reserved. Please use a different one.");
+    return;
+  }
+  if (findAccount(email)) {
+    showAuthError("That email belongs to a customer account. Please use a different one.");
+    return;
+  }
+  if (findEmployee(email)) {
+    showAuthError("An account with that email already exists — try signing in instead.");
+    return;
+  }
+  if (!password || password.length < 6) {
+    showAuthError("Please choose a password that's at least 6 characters.");
+    return;
+  }
+
+  const employees = getEmployees();
+  employees.push({
+    firstName, lastName, email,
+    status: 'active',
+    inviteToken: generateInviteToken(),
+    password
+  });
+  saveEmployees(employees);
+  finishSignIn(email);
+}
+
 function finishSignIn(email) {
   setCurrentUser(email);
   document.getElementById('signin-modal').classList.remove('active');
@@ -1226,7 +1310,7 @@ function renderAccountWidget() {
       label = 'Admin';
       dashboardBtn = `<button onclick="renderAdminDashboard(); navigateTo('admin-view');" style="text-decoration:underline;">Dashboard</button>`;
     } else if (employee) {
-      label = `${employee.firstName} (Employee)`;
+      label = `${employee.firstName} (Service Provider)`;
       dashboardBtn = `<button onclick="renderEmployeeDashboard(); navigateTo('employee-view');" style="text-decoration:underline;">Dashboard</button>`;
     }
     el.innerHTML = `
@@ -1236,7 +1320,15 @@ function renderAccountWidget() {
       <button class="logout-link" onclick="logoutUser()">Log out</button>
     `;
   } else {
-    el.innerHTML = `<button onclick="openSignInModal()">👤 Sign in</button>`;
+    el.innerHTML = `
+      <div style="position:relative;">
+        <button onclick="toggleSignInRolePicker()" id="signin-role-btn">👤 Sign in ▾</button>
+        <div id="signin-role-menu" style="display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.3);overflow:hidden;min-width:160px;z-index:70;">
+          <button onclick="chooseSignInRole('customer')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:0.85rem;color:var(--foreground);">Customer</button>
+          <button onclick="chooseSignInRole('provider')" style="display:block;width:100%;text-align:left;padding:10px 14px;border:none;background:none;cursor:pointer;font-family:inherit;font-size:0.85rem;color:var(--foreground);border-top:1px solid var(--border);">Service Provider</button>
+        </div>
+      </div>
+    `;
   }
 }
 
@@ -1283,7 +1375,12 @@ function confirmCartAsBookings() {
   const mine = cart.filter(c => c.email === email);
   const others = cart.filter(c => c.email !== email);
   const bookings = getBookings();
-  const newBookings = mine.map(item => ({ ...item })); // keep the id so it can be cancelled later
+  const newBookings = mine.map(item => ({
+    ...item,
+    assignedProviderEmail: null,
+    jobRequests: [],
+    completed: false
+  })); // keep the id so it can be cancelled later
   writeStore(BOOKINGS_KEY, [...bookings, ...newBookings]);
   writeStore(CART_KEY, others);
   return newBookings;
@@ -1354,7 +1451,7 @@ function offeringFromSource(listId, idx) {
 
 function openBookingModal(listId, idx) {
   if (!getCurrentUser()) {
-    openSignInModal(() => openBookingModalActual(listId, idx));
+    openSignInModal(() => openBookingModalActual(listId, idx), 'customer');
     return;
   }
   openBookingModalActual(listId, idx);
@@ -1654,11 +1751,21 @@ function ensureBookingIds() {
   const bookings = getBookings();
   let changed = false;
   const patched = bookings.map((b, idx) => {
-    if (!b.id) {
+    let updated = b;
+    if (!updated.id) {
       changed = true;
-      return { ...b, id: `legacy-${idx}-${b.dateISO}-${b.time}-${Date.now()}` };
+      updated = { ...updated, id: `legacy-${idx}-${updated.dateISO}-${updated.time}-${Date.now()}` };
     }
-    return b;
+    if (updated.assignedProviderEmail === undefined || updated.jobRequests === undefined || updated.completed === undefined) {
+      changed = true;
+      updated = {
+        ...updated,
+        assignedProviderEmail: updated.assignedProviderEmail ?? null,
+        jobRequests: updated.jobRequests ?? [],
+        completed: updated.completed ?? false
+      };
+    }
+    return updated;
   });
   if (changed) writeStore(BOOKINGS_KEY, patched);
 }
@@ -1676,19 +1783,29 @@ function renderAdminDashboard() {
   if (bookings.length === 0) {
     bookingsList.innerHTML = '<p style="color:var(--muted-foreground);">No bookings yet.</p>';
   } else {
-    bookingsList.innerHTML = bookings.map(b => `
+    bookingsList.innerHTML = bookings.map(b => {
+      let statusNote = '';
+      if (b.completed) {
+        statusNote = ` — ✓ completed by ${b.assignedProviderEmail}`;
+      } else if (b.assignedProviderEmail) {
+        statusNote = ` — assigned to ${b.assignedProviderEmail}`;
+      }
+      return `
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}${statusNote}</p>
         </div>
         <div style="text-align:right;">
           <p style="font-weight:500;margin:0 0 6px 0;">$${b.price}</p>
           <button class="remove-btn" onclick="openCancelBookingModal('${b.id}')">Cancel</button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   }
+
+  renderAdminJobRequests(bookings);
 
   const customersList = document.getElementById('admin-customers-list');
   // Only customers who've actually completed a purchase show up here —
@@ -1718,11 +1835,67 @@ function renderAdminDashboard() {
   renderAdminEmployeesList();
 }
 
+function renderAdminJobRequests(bookings) {
+  const list = document.getElementById('admin-job-requests-list');
+  const withRequests = bookings.filter(b => !b.assignedProviderEmail && (b.jobRequests || []).length > 0);
+
+  if (withRequests.length === 0) {
+    list.innerHTML = '<p style="color:var(--muted-foreground);">No pending job requests.</p>';
+    return;
+  }
+
+  list.innerHTML = withRequests.map(b => {
+    const requestRows = (b.jobRequests || []).map(providerEmail => {
+      const emp = findEmployee(providerEmail);
+      const name = emp ? `${emp.firstName} ${emp.lastName}` : providerEmail;
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+          <span class="meta">${name} (${providerEmail})</span>
+          <div style="display:flex;gap:8px;">
+            <button class="add-btn" onclick="acceptJobRequest('${b.id}','${providerEmail.replace(/'/g, "\\'")}')">Accept</button>
+            <button class="remove-btn" onclick="declineJobRequest('${b.id}','${providerEmail.replace(/'/g, "\\'")}')">Decline</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="appt-row" style="flex-direction:column;align-items:stretch;">
+        <div>
+          <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}</p>
+        </div>
+        ${requestRows}
+      </div>
+    `;
+  }).join('');
+}
+
+function acceptJobRequest(bookingId, providerEmail) {
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId);
+  if (!booking) return;
+  booking.assignedProviderEmail = providerEmail;
+  booking.jobRequests = []; // job is taken, clear remaining requests
+  writeStore(BOOKINGS_KEY, bookings);
+  renderAdminDashboard();
+  showToast(`Assigned to ${providerEmail}`);
+}
+
+function declineJobRequest(bookingId, providerEmail) {
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId);
+  if (!booking) return;
+  booking.jobRequests = (booking.jobRequests || []).filter(e => e !== providerEmail);
+  writeStore(BOOKINGS_KEY, bookings);
+  renderAdminDashboard();
+  showToast(`Declined request from ${providerEmail}`);
+}
+
 function renderAdminEmployeesList() {
   const list = document.getElementById('admin-employees-list');
   const employees = getEmployees();
   if (employees.length === 0) {
-    list.innerHTML = '<p style="color:var(--muted-foreground);">No employees added yet.</p>';
+    list.innerHTML = '<p style="color:var(--muted-foreground);">No service providers added yet.</p>';
     return;
   }
   list.innerHTML = employees.map(e => `
@@ -1867,24 +2040,76 @@ function submitEmployeeSetup() {
 }
 
 function renderEmployeeDashboard() {
+  ensureBookingIds();
   const email = getCurrentUser();
   const emp = findEmployee(email);
   document.getElementById('employee-dashboard-name').innerText = emp ? emp.firstName : '';
 
   const bookings = getBookings().slice().sort((a, b) => (a.dateISO + a.time).localeCompare(b.dateISO + b.time));
-  const list = document.getElementById('employee-jobs-list');
-  if (bookings.length === 0) {
-    list.innerHTML = '<p style="color:var(--muted-foreground);">No jobs scheduled yet.</p>';
+
+  // Jobs nobody has been assigned to yet — a provider can request one.
+  const openJobs = bookings.filter(b => !b.assignedProviderEmail && !b.completed);
+  const openList = document.getElementById('employee-open-jobs-list');
+  if (openJobs.length === 0) {
+    openList.innerHTML = '<p style="color:var(--muted-foreground);">No open job requests right now.</p>';
   } else {
-    list.innerHTML = bookings.map(b => `
+    openList.innerHTML = openJobs.map(b => {
+      const alreadyRequested = (b.jobRequests || []).includes(email);
+      return `
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — for ${b.email}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time}</p>
         </div>
+        ${alreadyRequested
+          ? `<span class="meta" style="font-weight:600;">Requested — awaiting approval</span>`
+          : `<button class="add-btn" onclick="requestJob('${b.id}')">Request this Job</button>`
+        }
+      </div>
+    `;
+    }).join('');
+  }
+
+  // Jobs this provider has been approved for.
+  const myJobs = bookings.filter(b => b.assignedProviderEmail === email && !b.completed);
+  const myList = document.getElementById('employee-active-jobs-list');
+  if (myJobs.length === 0) {
+    myList.innerHTML = '<p style="color:var(--muted-foreground);">No active jobs yet.</p>';
+  } else {
+    myList.innerHTML = myJobs.map(b => `
+      <div class="appt-row">
+        <div>
+          <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+          <p class="meta">${prettyDate(b.dateISO)} · ${b.time}</p>
+        </div>
+        <button class="add-btn" onclick="markJobComplete('${b.id}')">Mark Completed</button>
       </div>
     `).join('');
   }
+}
+
+function requestJob(bookingId) {
+  const email = getCurrentUser();
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId);
+  if (!booking || booking.assignedProviderEmail) return;
+  booking.jobRequests = booking.jobRequests || [];
+  if (!booking.jobRequests.includes(email)) {
+    booking.jobRequests.push(email);
+    writeStore(BOOKINGS_KEY, bookings);
+    showToast('Request sent — waiting on admin approval.');
+  }
+  renderEmployeeDashboard();
+}
+
+function markJobComplete(bookingId) {
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId);
+  if (!booking) return;
+  booking.completed = true;
+  writeStore(BOOKINGS_KEY, bookings);
+  showToast('Nice work — job marked as completed!');
+  renderEmployeeDashboard();
 }
 
 let pendingDeleteEmail = null;
@@ -1914,7 +2139,7 @@ function confirmDeleteCustomer() {
     closeDeleteCustomerModal();
     pendingDeleteType = 'customer';
     renderAdminEmployeesList();
-    showToast(`Removed employee: ${email}`);
+    showToast(`Removed service provider: ${email}`);
     return;
   }
 
