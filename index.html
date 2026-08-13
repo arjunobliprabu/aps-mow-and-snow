@@ -1302,6 +1302,9 @@
     </div>
 
     <div id="signup-only-fields" style="display:none;">
+      <label class="form-label" for="signup-name">Full name</label>
+      <input class="form-input" id="signup-name" type="text" placeholder="Jamie Lee">
+
       <label class="form-label" for="signup-street">Street Address</label>
       <input class="form-input" id="signup-street" type="text" placeholder="123 Main St">
 
@@ -1420,6 +1423,16 @@
     <p class="modal-sub" id="venmo-reminder-text" style="text-align:left;"></p>
     <p class="signin-note" style="margin-top:12px;">This app can't move real money — you'll need to send this yourself in the Venmo app.</p>
     <button class="pill-btn full-btn" type="button" onclick="closeVenmoReminderModal()" style="margin-top:8px;">Got it</button>
+  </div>
+</div>
+
+<!-- ================= JOB COMPLETED — WORKER PAYOUT REMINDER MODAL ================= -->
+<div class="modal-overlay" id="job-complete-modal" onclick="if(event.target===this) closeJobCompleteModal();">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeJobCompleteModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;">Nice work!</h2>
+    <p class="modal-sub" id="job-complete-text" style="text-align:left;"></p>
+    <button class="pill-btn full-btn" type="button" onclick="closeJobCompleteModal()" style="margin-top:8px;">Got it</button>
   </div>
 </div>
 
@@ -1615,6 +1628,10 @@ function saveAccounts(accounts) { writeStore(ACCOUNTS_KEY, accounts); }
 function findAccount(email) {
   return getAccounts().find(a => a.email.toLowerCase() === email.toLowerCase()) || null;
 }
+function customerDisplayName(email) {
+  const acct = findAccount(email);
+  return (acct && acct.name) ? acct.name : email;
+}
 function isAdminEmail(email) {
   return email && email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 }
@@ -1671,6 +1688,7 @@ function openSignInModal(onSuccess, role) {
   applyAuthMode();
   document.getElementById('signin-email').value = '';
   document.getElementById('signin-password').value = '';
+  document.getElementById('signup-name').value = '';
   document.getElementById('signup-street').value = '';
   document.getElementById('signup-city').value = '';
   document.getElementById('signup-state').value = '';
@@ -1784,6 +1802,7 @@ function submitSignUp() {
 
   const email = document.getElementById('signin-email').value.trim();
   const password = document.getElementById('signin-password').value;
+  const name = document.getElementById('signup-name').value.trim();
   const street = document.getElementById('signup-street').value.trim();
   const city = document.getElementById('signup-city').value.trim();
   const state = document.getElementById('signup-state').value.trim();
@@ -1809,6 +1828,10 @@ function submitSignUp() {
     showAuthError("An account with that email already exists — try signing in instead.");
     return;
   }
+  if (!name) {
+    showAuthError("Please enter your name.");
+    return;
+  }
   if (!street) {
     showAuthError("Please enter your street address.");
     return;
@@ -1827,7 +1850,7 @@ function submitSignUp() {
   }
 
   const accounts = getAccounts();
-  accounts.push({ email, password, address: { street, city, state, zip } });
+  accounts.push({ email, password, name, address: { street, city, state, zip } });
   saveAccounts(accounts);
   finishSignIn(email);
 }
@@ -3208,8 +3231,14 @@ function markJobComplete(bookingId) {
   if (!booking) return;
   booking.completed = true;
   writeStore(BOOKINGS_KEY, bookings);
-  showToast('Nice work — job marked as completed!');
-  renderEmployeeDashboard();
+  renderEmployeeDashboard(); // re-renders the worker map too, which drops completed jobs' pins
+
+  document.getElementById('job-complete-text').innerHTML =
+    `For customer <strong>${customerDisplayName(booking.email)}</strong>, admin will pay you in the next 10 days.`;
+  document.getElementById('job-complete-modal').classList.add('active');
+}
+function closeJobCompleteModal() {
+  document.getElementById('job-complete-modal').classList.remove('active');
 }
 
 let pendingDeleteEmail = null;
