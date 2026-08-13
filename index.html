@@ -2780,6 +2780,10 @@ async function renderAdminMap() {
   }
 
   if (bookings.length === 0) {
+    if (adminMapInstance) {
+      Object.values(adminMapMarkers).forEach(m => adminMapInstance.removeLayer(m));
+      adminMapMarkers = {};
+    }
     noteEl.innerText = 'No bookings yet.';
     return;
   }
@@ -2912,6 +2916,7 @@ function renderAdminDashboard() {
   }
 
   renderAdminEmployeesList();
+  renderAdminMap();
 }
 
 function renderAdminJobRequests(bookings) {
