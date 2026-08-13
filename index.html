@@ -20,7 +20,7 @@
      text with your own bio. To add a real photo, replace the
      placeholder div with <img src="your-photo.jpg" ...>.
 
-  4. TIME SLOTS: search for "TIME_SLOTS" to add/change available
+  4. TIME SLOTS: search for "getTimeSlotsForDate" to add/change available
      appointment times.
 
   5. ADMIN LOGIN: search for "ADMIN_EMAIL" and "ADMIN_PASSWORD" to
@@ -267,6 +267,65 @@
     font-family: inherit;
   }
   .add-btn:hover { opacity: 0.9; }
+  .offering.pass-offering {
+    position: relative;
+    border: 2px solid var(--primary);
+    background: linear-gradient(135deg, var(--warm-bg) 0%, #fff6df 100%);
+    box-shadow: 0 12px 30px -14px rgba(0,0,0,0.28);
+  }
+  .pass-badge {
+    position: absolute;
+    top: -13px;
+    left: 26px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 999px;
+  }
+  .pass-weekly-note { font-size: 0.8rem; color: var(--muted-foreground); margin-top: 6px; font-style: normal; }
+  .offering.pass-offering .add-btn { background: var(--foreground); }
+  .next-available-hint {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--muted-foreground);
+    background: var(--muted, rgba(0,0,0,0.04));
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .next-available-hint:hover { opacity: 0.85; }
+  .before-after-section { margin-top: 60px; }
+  .before-after-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-top: 24px;
+  }
+  .before-after-card {
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .before-after-card .ba-images { display: grid; grid-template-columns: 1fr 1fr; }
+  .before-after-card .ba-images div {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: var(--muted-foreground);
+    background: var(--muted, #f2f2f2);
+    text-align: center;
+    padding: 10px;
+  }
+  .before-after-card .ba-images img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .before-after-card .ba-images div:first-child { border-right: 1px solid var(--border); }
+  .before-after-card .ba-label { padding: 12px 16px; font-size: 0.85rem; font-weight: 500; }
 
   /* About page */
   .about-photo {
@@ -805,6 +864,12 @@
       </div>
     </div>
 
+    <div class="before-after-section">
+      <h2 class="font-display" style="font-size:1.8rem; margin:0;">See the Difference</h2>
+      <p class="subtitle" style="margin-top:8px;">A few recent jobs — before we showed up, and after.</p>
+      <div class="before-after-grid" id="before-after-grid"></div>
+    </div>
+
     <footer class="home-footer">
       <button class="pill-btn" onclick="navigateTo('about-view')">About the Creator →</button>
       <p class="footnote">Serving the neighborhood, one season at a time.</p>
@@ -1176,6 +1241,11 @@
       <div class="time-grid" id="modal-time-grid"></div>
     </div>
 
+    <div id="modal-size-section" style="display:none;">
+      <p style="font-size:0.9rem; margin-top:20px; margin-bottom:0;">Yard size</p>
+      <div class="time-grid" id="modal-size-grid"></div>
+    </div>
+
     <div class="modal-footer">
       <button class="pill-btn full-btn" id="modal-confirm-btn" disabled onclick="confirmBooking()">Continue to finalize order</button>
     </div>
@@ -1357,10 +1427,11 @@
    DATA
    ============================================================ */
 const SPRING_FALL_OFFERINGS = [
-  { name: "Lawn mowing — back yard", price: 40, priceLabel: "$40 / visit", description: "Precision cut and edged borders for the back yard." },
-  { name: "Lawn mowing — front yard", price: 25, priceLabel: "$25 / visit", description: "Curb-appeal cut and clean edging up front." },
-  { name: "Leaf blowing", price: 30, priceLabel: "$30 / visit", description: "Full yard clearing, beds and walkways included." },
-  { name: "Weed whacking", price: 30, priceLabel: "$30 / visit", description: "Trim along fences, beds and hardscape edges." },
+  { name: "Seasonal Lawn Care Pass", price: 400, priceLabel: "$400 / full season", description: "Skip picking dates one by one — you'll be provided with service every week, all season long.", isPass: true },
+  { name: "Lawn mowing — back yard", sizePricing: { "Small": 30, "Medium": 40, "Large": 50, "Extra Large": 60 }, description: "Precision cut and edged borders for the back yard." },
+  { name: "Lawn mowing — front yard", sizePricing: { "Small": 20, "Medium": 30, "Large": 40, "Extra Large": 50 }, description: "Curb-appeal cut and clean edging up front." },
+  { name: "Leaf blowing", sizePricing: { "Small": 20, "Medium": 25, "Large": 30, "Extra Large": 35 }, description: "Full yard clearing, beds and walkways included." },
+  { name: "Weed whacking", sizePricing: { "Small": 30, "Medium": 40, "Large": 50, "Extra Large": 60 }, description: "Trim along fences, beds and hardscape edges." },
   { name: "Plant watering", price: 25, priceLabel: "$25 / visit", description: "Scheduled deep watering for beds and containers." },
   { name: "Seasonal cleanup", price: 200, priceLabel: "$200 / one visit", description: "Full property reset at the start or end of the season." },
 ];
@@ -1372,7 +1443,20 @@ const WINTER_OFFERINGS = [
   { name: "Seasonal snow plan", price: 200, priceLabel: "$200 / visit", description: "Priority routing on your scheduled plow visits all winter long." },
 ];
 
-const TIME_SLOTS = ["12 PM", "4 PM"];
+// Summer hours (through Sept 8): daytime slots. Once the school year
+// starts (Sept 9 onward, and continuing through the rest of the school
+// year into next spring), only evening slots 5–8 PM are offered.
+// This checks month/day only (ignores year) so it applies every year
+// without needing to be updated each season.
+function isSummerSchedule(dateISO) {
+  const [, m, d] = dateISO.split("-").map(Number);
+  if (m >= 6 && m <= 8) return true; // June, July, August fully summer
+  if (m === 9 && d <= 8) return true; // Sept 1–8
+  return false;
+}
+function getTimeSlotsForDate(dateISO) {
+  return isSummerSchedule(dateISO) ? ["12 PM", "4 PM"] : ["5 PM", "6 PM", "7 PM", "8 PM"];
+}
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DOW = ["S","M","T","W","T","F","S"];
 
@@ -1807,14 +1891,29 @@ function getCart() { return readStore(CART_KEY, []); }
 
 // A slot only counts as "Booked" once a purchase has actually gone through
 // (i.e. it's in the confirmed bookings list) — sitting in someone's cart
-// does not reserve it. Among confirmed bookings, it's only "taken" for a
-// customer if it belongs to a DIFFERENT email; the same signed-in customer
-// can stack multiple services onto their own already-booked day + time.
-function isSlotTakenByOther(dateISO, time, email) {
-  return getBookings().some(b => b.dateISO === dateISO && b.time === time && b.email !== email);
+// does not reserve it. Exclusivity is per SERVICE: the same service (e.g.
+// two lawn mowings) can't be booked twice in one date+time slot, since
+// that's one worker doing one job. Different services (lawn mowing +
+// weed whacking) CAN share the same date+time slot.
+function isSlotBookedForService(dateISO, time, serviceName) {
+  return getBookings().some(b => b.dateISO === dateISO && b.time === time && b.serviceName === serviceName);
 }
-function customerAlreadyHasSlot(dateISO, time, email) {
-  return getBookings().some(b => b.dateISO === dateISO && b.time === time && b.email === email);
+// Looks ahead up to 30 days for the next date+time where this service
+// is open, so a customer whose preferred slot is taken gets a concrete
+// suggestion instead of a dead end.
+function findNextAvailable(startYear, startMonth, startDay, serviceName) {
+  let d = new Date(startYear, startMonth, startDay);
+  for (let i = 0; i < 30; i++) {
+    const dateISO = formatDateISO(d.getFullYear(), d.getMonth(), d.getDate());
+    const slots = getTimeSlotsForDate(dateISO);
+    for (const slot of slots) {
+      if (!isSlotBookedForService(dateISO, slot, serviceName)) {
+        return { dateISO, time: slot };
+      }
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return null;
 }
 function addToCart(item) {
   const cart = getCart();
@@ -1873,6 +1972,9 @@ function prettyDate(iso) {
   const date = new Date(y, m - 1, d);
   return date.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
+function bookingWhenLabel(b) {
+  return b.isPass ? 'Weekly — full season' : `${prettyDate(b.dateISO)} · ${b.time}`;
+}
 
 /* ============================================================
    NAVIGATION
@@ -1898,20 +2000,30 @@ function refreshCartBadges() {
 /* ============================================================
    RENDER OFFERING LISTS
    ============================================================ */
+function offeringPriceLabel(o) {
+  if (o.priceLabel) return o.priceLabel;
+  if (o.sizePricing) {
+    const min = Math.min(...Object.values(o.sizePricing));
+    return `From $${min} / visit`;
+  }
+  return '';
+}
 function renderOfferings(listId, offerings, accentClass) {
   const ul = document.getElementById(listId);
   ul.innerHTML = '';
   offerings.forEach((o, idx) => {
     const li = document.createElement('li');
-    li.className = `offering ${accentClass}`;
+    li.className = `offering ${accentClass}${o.isPass ? ' pass-offering' : ''}`;
     li.innerHTML = `
+      ${o.isPass ? '<span class="pass-badge">Best value</span>' : ''}
       <div>
         <h2 class="font-display">${o.name}</h2>
         <p>${o.description}</p>
+        ${o.isPass ? '<p class="pass-weekly-note">No need to book each visit — you\'re covered every week, all season.</p>' : ''}
       </div>
       <div class="price-col">
-        <p>${o.priceLabel}</p>
-        <button class="add-btn" onclick="openBookingModal('${listId}', ${idx})">Add</button>
+        <p>${offeringPriceLabel(o)}</p>
+        <button class="add-btn" onclick="openBookingModal('${listId}', ${idx})">${o.isPass ? 'Get the pass' : 'Add'}</button>
       </div>
     `;
     ul.appendChild(li);
@@ -1922,7 +2034,7 @@ function renderOfferings(listId, offerings, accentClass) {
    BOOKING MODAL
    ============================================================ */
 let activeOffering = null;
-let modalYear, modalMonth, modalDay = null, modalTime = null;
+let modalYear, modalMonth, modalDay = null, modalTime = null, modalSize = null;
 const todayReal = new Date();
 
 function offeringFromSource(listId, idx) {
@@ -1930,11 +2042,42 @@ function offeringFromSource(listId, idx) {
 }
 
 function openBookingModal(listId, idx) {
+  const offering = offeringFromSource(listId, idx);
+  if (offering.isPass) {
+    if (!getCurrentUser()) {
+      openSignInModal(() => addPassToCart(offering), 'customer');
+      return;
+    }
+    addPassToCart(offering);
+    return;
+  }
   if (!getCurrentUser()) {
     openSignInModal(() => openBookingModalActual(listId, idx), 'customer');
     return;
   }
   openBookingModalActual(listId, idx);
+}
+
+// The Seasonal Pass isn't tied to a specific date/time — the customer
+// gets weekly visits all season, scheduled by us — so it skips the
+// calendar entirely and goes straight into the cart.
+function addPassToCart(offering) {
+  const email = getCurrentUser();
+  const alreadyHavePass = getCart().some(c => c.email === email && c.isPass) ||
+    getBookings().some(b => b.email === email && b.isPass);
+  if (alreadyHavePass) {
+    showToast(`You already have a ${offering.name} on your account.`);
+    return;
+  }
+  addToCart({
+    dateISO: formatDateISO(todayReal.getFullYear(), todayReal.getMonth(), todayReal.getDate()),
+    time: 'Weekly — full season',
+    serviceName: offering.name,
+    price: offering.price,
+    isPass: true
+  });
+  refreshCartBadges();
+  showToast(`Added ${offering.name} — $${offering.price} for the whole season, with service every week.`);
 }
 
 function openBookingModalActual(listId, idx) {
@@ -1944,7 +2087,9 @@ function openBookingModalActual(listId, idx) {
   modalMonth = todayReal.getMonth();
   modalDay = null;
   modalTime = null;
+  modalSize = null;
   document.getElementById('modal-time-section').style.display = 'none';
+  document.getElementById('modal-size-section').style.display = 'none';
   document.getElementById('modal-confirm-btn').disabled = true;
   buildDowRow('modal-cal-dow');
   renderModalCalendar();
@@ -1964,8 +2109,9 @@ function modalCalMonth(direction) {
   modalMonth += direction;
   if (modalMonth < 0) { modalMonth = 11; modalYear--; }
   if (modalMonth > 11) { modalMonth = 0; modalYear++; }
-  modalDay = null; modalTime = null;
+  modalDay = null; modalTime = null; modalSize = null;
   document.getElementById('modal-time-section').style.display = 'none';
+  document.getElementById('modal-size-section').style.display = 'none';
   document.getElementById('modal-confirm-btn').disabled = true;
   renderModalCalendar();
 }
@@ -2008,48 +2154,100 @@ function selectModalDay(day, cell) {
   const dateISO = formatDateISO(modalYear, modalMonth, day);
   document.getElementById('modal-date-label').innerText = prettyDate(dateISO);
   document.getElementById('modal-time-section').style.display = 'block';
+  document.getElementById('modal-size-section').style.display = 'none';
   document.getElementById('modal-confirm-btn').disabled = true;
+  modalTime = null;
+  modalSize = null;
 
   const timeGrid = document.getElementById('modal-time-grid');
   timeGrid.innerHTML = '';
-  const email = getCurrentUser();
-  TIME_SLOTS.forEach(slot => {
-    const takenByOther = isSlotTakenByOther(dateISO, slot, email);
-    const isMine = customerAlreadyHasSlot(dateISO, slot, email);
+  const slotsForDay = getTimeSlotsForDate(dateISO);
+  let anyOpen = false;
+  slotsForDay.forEach(slot => {
+    const taken = isSlotBookedForService(dateISO, slot, activeOffering.name);
+    if (!taken) anyOpen = true;
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'time-slot-btn' + (takenByOther ? ' taken' : '');
-    btn.innerHTML = slot +
-      (takenByOther ? '<span class="time-slot-taken-label">Booked</span>' : '') +
-      (!takenByOther && isMine ? '<span class="time-slot-taken-label">Your slot — add another</span>' : '');
-    if (!takenByOther) {
+    btn.className = 'time-slot-btn' + (taken ? ' taken' : '');
+    btn.innerHTML = slot + (taken ? '<span class="time-slot-taken-label">Booked</span>' : '');
+    if (!taken) {
       btn.onclick = () => selectModalTime(slot, btn);
     } else {
       btn.disabled = true;
     }
     timeGrid.appendChild(btn);
   });
+
+  let hint = document.getElementById('modal-next-available-hint');
+  if (hint) hint.remove();
+  if (!anyOpen) {
+    const next = findNextAvailable(modalYear, modalMonth, modalDay, activeOffering.name);
+    if (next) {
+      hint = document.createElement('div');
+      hint.id = 'modal-next-available-hint';
+      hint.className = 'next-available-hint';
+      hint.innerText = `All slots for ${activeOffering.name} are booked that day. Next available: ${prettyDate(next.dateISO)} at ${next.time} — tap to jump there.`;
+      hint.onclick = () => {
+        const [y, m, d] = next.dateISO.split('-').map(Number);
+        modalYear = y; modalMonth = m - 1;
+        renderModalCalendar();
+        setTimeout(() => {
+          const cells = Array.from(document.querySelectorAll('#modal-cal-grid .cal-day')).filter(c => !c.classList.contains('pad'));
+          const targetCell = cells.find(c => parseInt(c.innerText, 10) === d);
+          if (targetCell) targetCell.onclick();
+        }, 0);
+      };
+      timeGrid.parentElement.appendChild(hint);
+    }
+  }
 }
 
 function selectModalTime(slot, btn) {
   document.querySelectorAll('#modal-time-grid .time-slot-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   modalTime = slot;
-  document.getElementById('modal-confirm-btn').disabled = false;
+  modalSize = null;
+
+  if (activeOffering.sizePricing) {
+    const sizeSection = document.getElementById('modal-size-section');
+    const sizeGrid = document.getElementById('modal-size-grid');
+    sizeSection.style.display = 'block';
+    sizeGrid.innerHTML = '';
+    document.getElementById('modal-confirm-btn').disabled = true;
+    Object.entries(activeOffering.sizePricing).forEach(([sizeName, sizePrice]) => {
+      const sbtn = document.createElement('button');
+      sbtn.type = 'button';
+      sbtn.className = 'time-slot-btn';
+      sbtn.innerHTML = `${sizeName}<span class="time-slot-taken-label">$${sizePrice}</span>`;
+      sbtn.onclick = () => {
+        document.querySelectorAll('#modal-size-grid .time-slot-btn').forEach(b => b.classList.remove('selected'));
+        sbtn.classList.add('selected');
+        modalSize = sizeName;
+        document.getElementById('modal-confirm-btn').disabled = false;
+      };
+      sizeGrid.appendChild(sbtn);
+    });
+  } else {
+    document.getElementById('modal-size-section').style.display = 'none';
+    document.getElementById('modal-confirm-btn').disabled = false;
+  }
 }
 
 function confirmBooking() {
   if (!activeOffering || modalDay === null || !modalTime) return;
+  if (activeOffering.sizePricing && !modalSize) return;
   const dateISO = formatDateISO(modalYear, modalMonth, modalDay);
+  const price = activeOffering.sizePricing ? activeOffering.sizePricing[modalSize] : activeOffering.price;
+  const serviceName = activeOffering.sizePricing ? `${activeOffering.name} (${modalSize})` : activeOffering.name;
   addToCart({
     dateISO,
     time: modalTime,
-    serviceName: activeOffering.name,
-    price: activeOffering.price
+    serviceName,
+    price
   });
   closeBookingModal();
   refreshCartBadges();
-  showToast(`Added ${activeOffering.name} — ${prettyDate(dateISO)} · ${modalTime}`);
+  showToast(`Added ${serviceName} — ${prettyDate(dateISO)} · ${modalTime}`);
 }
 
 function showToast(message) {
@@ -2093,7 +2291,7 @@ function renderCart() {
     li.innerHTML = `
       <div>
         <h2 class="font-display">${item.serviceName}</h2>
-        <p class="meta">${prettyDate(item.dateISO)} · ${item.time}</p>
+        <p class="meta">${bookingWhenLabel(item)}</p>
       </div>
       <div class="price-col">
         <p style="margin:0;font-weight:500;">$${item.price}</p>
@@ -2140,7 +2338,7 @@ function renderCheckout() {
     row.innerHTML = `
       <div>
         <p style="margin:0;font-weight:500;">${item.serviceName}</p>
-        <p class="meta" style="margin:2px 0 0 0;">${prettyDate(item.dateISO)} · ${item.time}</p>
+        <p class="meta" style="margin:2px 0 0 0;">${bookingWhenLabel(item)}</p>
         <div style="margin-top:4px;">${tag}</div>
       </div>
       <span>$${item.price}</span>
@@ -2182,16 +2380,34 @@ function renderCheckout() {
 // cryptographically confirm the charge actually happened the way a real
 // backend + webhook setup would.
 const SERVICE_STRIPE_LINKS = {
+  "Seasonal Lawn Care Pass": "",
   "Seasonal snow plan": "https://buy.stripe.com/test_5kQ9AMgjQ2nL9pCcXY0gw02",
   "Car cleaning (snow)": "https://buy.stripe.com/test_14A3cogjQ7I559mbTU0gw03",
   "Shoveling snow": "https://buy.stripe.com/test_5kQaEQ7NkbYl7hu3no0gw04",
   "Snow plowing": "https://buy.stripe.com/test_7sY3co5Fc3rP9pCgaa0gw05",
   "Seasonal cleanup": "https://buy.stripe.com/test_7sY9AM3x49QdbxK5vw0gw06",
   "Plant watering": "https://buy.stripe.com/test_eVq5kwebIfax45if660gw07",
-  "Weed whacking": "https://buy.stripe.com/test_5kQaEQ6Jgd2pcBObTU0gw08",
-  "Leaf blowing": "https://buy.stripe.com/test_6oUfZa8Rofax8lyf660gw09",
-  "Lawn mowing — front yard": "https://buy.stripe.com/test_8x228k4B80fD6dq1fg0gw0a",
-  "Lawn mowing — back yard": "https://buy.stripe.com/test_28E4gs7Nk5zXgS49LM0gw0b"
+  // Yard-size services each need their OWN Stripe Payment Link per size,
+  // since each size is a different fixed price. Fill in the 16 links
+  // below once they're created in the Stripe dashboard (one product per
+  // row, priced to match). Until filled in, checkout falls back to a
+  // "no payment link yet" message and Venmo still works normally.
+  "Weed whacking (Small)": "",
+  "Weed whacking (Medium)": "",
+  "Weed whacking (Large)": "",
+  "Weed whacking (Extra Large)": "",
+  "Leaf blowing (Small)": "",
+  "Leaf blowing (Medium)": "",
+  "Leaf blowing (Large)": "",
+  "Leaf blowing (Extra Large)": "",
+  "Lawn mowing — front yard (Small)": "",
+  "Lawn mowing — front yard (Medium)": "",
+  "Lawn mowing — front yard (Large)": "",
+  "Lawn mowing — front yard (Extra Large)": "",
+  "Lawn mowing — back yard (Small)": "",
+  "Lawn mowing — back yard (Medium)": "",
+  "Lawn mowing — back yard (Large)": "",
+  "Lawn mowing — back yard (Extra Large)": ""
 };
 
 function openVenmoPayModal() {
@@ -2299,7 +2515,7 @@ function renderConfirmation() {
     row.innerHTML = `
       <div>
         <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-        <p class="meta">${prettyDate(b.dateISO)} · ${b.time}</p>
+        <p class="meta">${bookingWhenLabel(b)}</p>
       </div>
       <span style="font-weight:500;">$${b.price}</span>
     `;
@@ -2413,7 +2629,7 @@ async function renderAdminMap() {
     const acc = accounts.find(a => a.email === b.email);
     if (acc && acc.address && acc.address.lat != null && acc.address.lng != null) {
       const marker = L.marker([acc.address.lat, acc.address.lng]).addTo(adminMapInstance);
-      marker.bindPopup(`<strong>${b.serviceName}</strong><br>${prettyDate(b.dateISO)} · ${b.time}<br>${b.email}`);
+      marker.bindPopup(`<strong>${b.serviceName}</strong><br>${bookingWhenLabel(b)}<br>${b.email}`);
       marker.on('click', () => highlightAdminJob(b.id));
       marker.openPopup(); // requests are visible right away, no click needed
       adminMapMarkers[b.id] = marker;
@@ -2480,7 +2696,7 @@ function renderAdminDashboard() {
       <div class="appt-row clickable-job" id="admin-job-row-${b.id}" onclick="highlightAdminJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}${statusNote}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${statusNote}</p>
         </div>
         <div style="text-align:right;">
           <p style="font-weight:500;margin:0 0 6px 0;">${priceLabel}</p>
@@ -2550,7 +2766,7 @@ function renderAdminJobRequests(bookings) {
       <div class="appt-row" style="flex-direction:column;align-items:stretch;">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — booked by ${b.email}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}</p>
         </div>
         ${requestRows}
       </div>
@@ -2570,7 +2786,7 @@ function acceptJobRequest(bookingId, providerEmail) {
   const emp = findEmployee(providerEmail);
   const { providerCut } = splitJobPrice(booking.price);
   document.getElementById('venmo-reminder-text').innerHTML =
-    `<strong>${emp ? emp.firstName + ' ' + emp.lastName : providerEmail}</strong> is assigned to <strong>${booking.serviceName}</strong> (${prettyDate(booking.dateISO)} · ${booking.time}).<br><br>
+    `<strong>${emp ? emp.firstName + ' ' + emp.lastName : providerEmail}</strong> is assigned to <strong>${booking.serviceName}</strong> (${bookingWhenLabel(booking)}).<br><br>
      Their share is <strong>$${providerCut.toFixed(2)}</strong> (85% of $${booking.price}).<br><br>
      Send it yourself via Venmo to: <strong>${emp && emp.venmo ? emp.venmo : 'no Venmo on file'}</strong>`;
   document.getElementById('venmo-reminder-modal').classList.add('active');
@@ -2806,7 +3022,7 @@ async function renderWorkerMap(relevantBookings) {
     const acc = accounts.find(a => a.email === b.email);
     if (acc && acc.address && acc.address.lat != null && acc.address.lng != null) {
       const marker = L.marker([acc.address.lat, acc.address.lng]).addTo(workerMapInstance);
-      marker.bindPopup(`<strong>${b.serviceName}</strong><br>${prettyDate(b.dateISO)} · ${b.time}`);
+      marker.bindPopup(`<strong>${b.serviceName}</strong><br>${bookingWhenLabel(b)}`);
       marker.on('click', () => highlightWorkerJob(b.id));
       marker.openPopup(); // requests are visible right away, no click needed
       workerMapMarkers[b.id] = marker;
@@ -2862,7 +3078,7 @@ function renderEmployeeDashboard() {
       <div class="appt-row clickable-job" id="worker-job-row-${b.id}" onclick="highlightWorkerJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you'd earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
+          <p class="meta">${bookingWhenLabel(b)} — you'd earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
         </div>
         ${alreadyRequested
           ? `<span class="meta" style="font-weight:600;">Requested — awaiting approval</span>`
@@ -2885,7 +3101,7 @@ function renderEmployeeDashboard() {
       <div class="appt-row clickable-job" id="worker-job-row-${b.id}" onclick="highlightWorkerJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${prettyDate(b.dateISO)} · ${b.time} — you earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
+          <p class="meta">${bookingWhenLabel(b)} — you earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
         </div>
         <button class="add-btn" onclick="event.stopPropagation(); markJobComplete('${b.id}')">Mark Completed</button>
       </div>
@@ -2972,7 +3188,7 @@ function openCancelBookingModal(bookingId) {
   if (!booking) return;
   pendingCancelBookingId = bookingId;
   document.getElementById('cancel-booking-details').innerText =
-    `${booking.serviceName} — ${prettyDate(booking.dateISO)} · ${booking.time} (booked by ${booking.email})`;
+    `${booking.serviceName} — ${bookingWhenLabel(booking)} (booked by ${booking.email})`;
   document.getElementById('cancel-booking-amount').innerText = booking.price;
   document.getElementById('cancel-booking-modal').classList.add('active');
 }
