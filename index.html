@@ -2451,26 +2451,23 @@ const SERVICE_STRIPE_LINKS = {
   "Seasonal cleanup": "https://buy.stripe.com/test_7sY9AM3x49QdbxK5vw0gw06",
   "Plant watering": "https://buy.stripe.com/test_eVq5kwebIfax45if660gw07",
   // Yard-size services each need their OWN Stripe Payment Link per size,
-  // since each size is a different fixed price. Fill in the 16 links
-  // below once they're created in the Stripe dashboard (one product per
-  // row, priced to match). Until filled in, checkout falls back to a
-  // "no payment link yet" message and Venmo still works normally.
-  "Weed whacking (Small)": "",
-  "Weed whacking (Medium)": "",
-  "Weed whacking (Large)": "",
-  "Weed whacking (Extra Large)": "",
-  "Leaf blowing (Small)": "",
-  "Leaf blowing (Medium)": "",
-  "Leaf blowing (Large)": "",
-  "Leaf blowing (Extra Large)": "",
-  "Lawn mowing — front yard (Small)": "",
-  "Lawn mowing — front yard (Medium)": "",
-  "Lawn mowing — front yard (Large)": "",
-  "Lawn mowing — front yard (Extra Large)": "",
-  "Lawn mowing — back yard (Small)": "",
-  "Lawn mowing — back yard (Medium)": "",
-  "Lawn mowing — back yard (Large)": "",
-  "Lawn mowing — back yard (Extra Large)": ""
+  // since each size is a different fixed price.
+  "Weed whacking (Extra Large)": "https://buy.stripe.com/test_7sY8wI8Rod2p45i5vw0gw0q",
+  "Weed whacking (Large)": "https://buy.stripe.com/test_7sY00c3x4bYl31ebTU0gw0p",
+  "Weed whacking (Small)": "https://buy.stripe.com/test_14A3co4B8fax59m2jk0gw0o",
+  "Weed whacking (Medium)": "https://buy.stripe.com/test_00w7sE2t0d2pgS45vw0gw0n",
+  "Leaf blowing (Extra Large)": "https://buy.stripe.com/test_9B6bIU0kS0fD1Xa8HI0gw0m",
+  "Leaf blowing (Large)": "https://buy.stripe.com/test_dRmdR23x4bYlatG2jk0gw0l",
+  "Leaf blowing (Small)": "https://buy.stripe.com/test_3cI5kwgjQ8M9fO00bc0gw0k",
+  "Leaf blowing (Medium)": "https://buy.stripe.com/test_dRm8wI9Vs8M9fO03no0gw0j",
+  "Lawn mowing — front yard (Extra Large)": "https://buy.stripe.com/test_7sY7sEaZw8M959m0bc0gw0i",
+  "Lawn mowing — front yard (Large)": "https://buy.stripe.com/test_bJecMYc3A2nLdFSbTU0gw0h",
+  "Lawn mowing — front yard (Small)": "https://buy.stripe.com/test_6oU5kw9Vs9Qd31e9LM0gw0g",
+  "Lawn mowing — front yard (Medium)": "https://buy.stripe.com/test_9B6cMY6Jg7I559mcXY0gw0f",
+  "Lawn mowing — back yard (Extra Large)": "https://buy.stripe.com/test_bJe8wId7EaUh7hu0bc0gw0e",
+  "Lawn mowing — back yard (Large)": "https://buy.stripe.com/test_4gM14ggjQbYlgS4f660gw0d",
+  "Lawn mowing — back yard (Small)": "https://buy.stripe.com/test_6oU5kwd7E0fD31ef660gw0c",
+  "Lawn mowing — back yard (Medium)": "https://buy.stripe.com/test_28E4gs7Nk5zXgS49LM0gw0b"
 };
 
 function openVenmoPayModal() {
