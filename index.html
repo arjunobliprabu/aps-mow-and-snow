@@ -1399,12 +1399,11 @@
   <div class="modal-box" style="max-width:380px;text-align:center;">
     <button class="modal-close-btn" onclick="closeVenmoPayModal()" title="Close">✕</button>
     <h2 class="modal-title font-display" style="font-size:1.4rem;">Pay with Venmo</h2>
-    <!-- PLACEHOLDER: replace "ap-mow-and-snow" below (in both the link and
-         the displayed @handle) with your real Venmo username once you send it. -->
     <p class="modal-sub">Send <strong id="venmo-owner-amount">$0</strong> to our Venmo:</p>
     <p class="font-display" style="font-size:1.6rem;margin:6px 0 18px 0;">
-      <a id="venmo-owner-link" href="https://venmo.com/u/ap-mow-and-snow" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">@ap-mow-and-snow</a>
+      <a id="venmo-owner-link" href="https://venmo.com/u/arjun-obliprabu" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">@arjun-obliprabu</a>
     </p>
+    <p class="signin-note" style="margin-top:-10px;margin-bottom:16px;">Tap the link above — it opens Venmo with the amount and note already filled in.</p>
     <label class="form-label" for="customer-venmo-handle">Your Venmo username</label>
     <input class="form-input" id="customer-venmo-handle" type="text" placeholder="@your-venmo">
     <p id="customer-venmo-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
@@ -2470,11 +2469,21 @@ const SERVICE_STRIPE_LINKS = {
   "Lawn mowing — back yard (Medium)": "https://buy.stripe.com/test_28E4gs7Nk5zXgS49LM0gw0b"
 };
 
+const VENMO_HANDLE = "arjun-obliprabu";
+// Builds a Venmo "pay" link pre-filled with the amount and a note, so
+// tapping it drops the customer straight into a ready-to-send payment
+// screen (in the Venmo app if installed, otherwise venmo.com) instead
+// of them having to type the amount in themselves.
+function venmoPayLink(amount, note) {
+  return `https://venmo.com/u/${VENMO_HANDLE}?txn=pay&amount=${encodeURIComponent(amount)}&note=${encodeURIComponent(note)}`;
+}
 function openVenmoPayModal() {
   const email = getCurrentUser();
   const cart = getCart().filter(c => c.email === email);
   if (cart.length === 0) return;
-  document.getElementById('venmo-owner-amount').innerText = `$${cart[0].price}`;
+  const item = cart[0];
+  document.getElementById('venmo-owner-amount').innerText = `$${item.price}`;
+  document.getElementById('venmo-owner-link').href = venmoPayLink(item.price, `AP's Mow and Snow — ${item.serviceName}`);
   document.getElementById('customer-venmo-handle').value = '';
   document.getElementById('customer-venmo-error').style.display = 'none';
   document.getElementById('customer-venmo-modal').classList.add('active');
