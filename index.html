@@ -46,6 +46,15 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+<!-- Firebase: used ONLY as a shared cloud database (Firestore), so that
+     accounts and bookings are the same on every device instead of stuck
+     in one browser's local storage. We use the "compat" build because
+     this app is one plain script (no build step / no bundler) — it lets
+     Firebase hang off the same global `firebase` object instead of
+     needing ES module imports. -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
 <style>
   :root {
     --radius: 0.75rem;
@@ -1540,6 +1549,79 @@ const ACCOUNT_KEY = "lc.currentUser.v1";
 const ACCOUNTS_KEY = "lc.accounts.v1";
 const EMPLOYEES_KEY = "lc.employees.v1";
 
+// ============================================================
+// CLOUD SYNC (Firebase Firestore)
+// ============================================================
+// Accounts, employees, and bookings need to be the SAME on every
+// device — a customer signs up on their phone, admin needs to see
+// it on their laptop a minute later. Local storage alone can't do
+// that; it's stuck on one browser. So these three lists are mirrored
+// into a shared Firestore database:
+//   - writeStore() (below) pushes local changes up to the cloud
+//   - a live listener pulls down changes made on OTHER devices and
+//     updates this device's local storage + re-renders the screen
+// Local storage stays as the instant "read this right now" copy
+// that the rest of the app already uses everywhere, so nothing else
+// in the app had to change for this to work.
+const firebaseConfig = {
+  apiKey: "AIzaSyAXuhxzU4Z8BkxRke46SIH7Ilr9tlgo7JU",
+  authDomain: "aps-mow-and-snow.firebaseapp.com",
+  projectId: "aps-mow-and-snow",
+  storageBucket: "aps-mow-and-snow.firebasestorage.app",
+  messagingSenderId: "119795067957",
+  appId: "1:119795067957:web:b488dd862ece402345157c"
+};
+let firestoreDb = null;
+try {
+  if (typeof firebase !== 'undefined') {
+    const fbApp = firebase.initializeApp(firebaseConfig);
+    firestoreDb = firebase.firestore(fbApp);
+  }
+} catch (e) {
+  console.warn("Cloud sync unavailable — this device will only see its own local data.", e);
+}
+
+// Which local storage keys are mirrored to the cloud, and the
+// Firestore document name each one lives under.
+const CLOUD_SYNCED_KEYS = {
+  [ACCOUNTS_KEY]: 'accounts',
+  [EMPLOYEES_KEY]: 'employees',
+  [BOOKINGS_KEY]: 'bookings'
+};
+
+function cloudSyncPush(key, value) {
+  const docName = CLOUD_SYNCED_KEYS[key];
+  if (!docName || !firestoreDb) return;
+  firestoreDb.collection('shared').doc(docName).set({ data: value, updatedAt: Date.now() })
+    .catch(err => console.warn('Cloud sync push failed — change saved on this device only.', err));
+}
+
+function initCloudSync() {
+  if (!firestoreDb) return;
+  Object.entries(CLOUD_SYNCED_KEYS).forEach(([localKey, docName]) => {
+    firestoreDb.collection('shared').doc(docName).onSnapshot(snap => {
+      if (!snap.exists) return;
+      const remote = snap.data().data;
+      const current = readStore(localKey, null);
+      if (JSON.stringify(remote) === JSON.stringify(current)) return; // nothing changed, skip a redundant re-render
+      try { localStorage.setItem(localKey, JSON.stringify(remote)); } catch (e) {}
+      refreshActiveView();
+    }, err => console.warn('Cloud sync listener error — this device may show stale data.', err));
+  });
+}
+
+// Re-renders whatever's currently on screen so a change made on
+// another device shows up here without needing a manual refresh.
+function refreshActiveView() {
+  const active = document.querySelector('.view.active');
+  if (!active) return;
+  if (active.id === 'admin-view' && typeof renderAdminDashboard === 'function') renderAdminDashboard();
+  if (active.id === 'employee-view' && typeof renderEmployeeDashboard === 'function') renderEmployeeDashboard();
+  if (active.id === 'cart-view' && typeof renderCart === 'function') renderCart();
+  if (active.id === 'checkout-view' && typeof renderCheckout === 'function') renderCheckout();
+  if (typeof refreshCartBadges === 'function') refreshCartBadges();
+}
+
 // Demo-only admin login. IMPORTANT: this app has no server, so this password
 // lives in plain text in this file's code — anyone who opens the page source
 // or browser dev tools can read it. Never reuse a real/important password
@@ -1969,6 +2051,7 @@ function readStore(key, fallback) {
 function writeStore(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); }
   catch (e) { console.warn("Could not save to this device.", e); }
+  cloudSyncPush(key, value);
 }
 function getBookings() { return readStore(BOOKINGS_KEY, []); }
 function getCart() { return readStore(CART_KEY, []); }
@@ -3321,6 +3404,7 @@ checkForStripeReturn();
 renderOfferings('springfall-offerings', SPRING_FALL_OFFERINGS, 'warm');
 renderOfferings('winter-offerings', WINTER_OFFERINGS, 'cool');
 refreshCartBadges();
+initCloudSync();
 
 // Re-render cart/checkout whenever those views are shown
 const origNavigateTo = navigateTo;
