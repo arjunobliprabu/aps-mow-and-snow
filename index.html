@@ -119,6 +119,7 @@
       repeating-linear-gradient(125deg, rgba(58,84,48,0.04) 0 46px, rgba(58,84,48,0) 46px 92px),
       linear-gradient(115deg, #d8e5cd 0%, #ecefe3 34%, #f5f1e4 48%, #f5f1e4 52%, #e3ecf2 66%, #c9d8e5 100%);
   }
+  .home-bg svg { display: block; width: 100%; height: 100%; }
 
   .wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px 90px; }
   .wrap-wide { max-width: 900px; margin: 0 auto; padding: 60px 24px 90px; }
@@ -766,7 +767,58 @@
   <button class="home-cart-widget" onclick="navigateTo('cart-view')">
     🛒 Cart <span class="cart-badge" id="cart-badge-home" style="display:none;"></span>
   </button>
-  <div class="home-bg home-bg-split"></div>
+  <div class="home-bg home-bg-split">
+    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Elegant botanical sprig: a slim stem with a few leaf strokes
+             and a small bud — a restrained, line-art take on a flower,
+             not a cartoon bloom. -->
+        <g id="botSprig">
+          <path d="M0,64 Q4,32 0,0" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <ellipse cx="-9" cy="20" rx="10" ry="4" fill="currentColor" transform="rotate(-32 -9 20)"/>
+          <ellipse cx="9" cy="33" rx="10" ry="4" fill="currentColor" transform="rotate(32 9 33)"/>
+          <ellipse cx="-7" cy="48" rx="9" ry="3.5" fill="currentColor" transform="rotate(-26 -7 48)"/>
+          <circle cx="0" cy="0" r="4.5" fill="currentColor"/>
+        </g>
+        <!-- Minimal pine sprig, for the winter side. -->
+        <g id="pineSprig" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="0" y1="0" x2="0" y2="52"/>
+          <line x1="0" y1="10" x2="-15" y2="0"/><line x1="0" y1="10" x2="15" y2="0"/>
+          <line x1="0" y1="25" x2="-17" y2="14"/><line x1="0" y1="25" x2="17" y2="14"/>
+          <line x1="0" y1="40" x2="-15" y2="29"/><line x1="0" y1="40" x2="15" y2="29"/>
+        </g>
+        <!-- Minimal 3-line snowflake. -->
+        <g id="minSnow" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="-13" y1="0" x2="13" y2="0"/>
+          <line x1="-6.5" y1="-11" x2="6.5" y2="11"/>
+          <line x1="-6.5" y1="11" x2="6.5" y2="-11"/>
+        </g>
+      </defs>
+
+      <g opacity="0.5">
+        <use href="#botSprig" transform="translate(60,160) rotate(-6) scale(1.05)" style="color:#6f8a5e"/>
+        <use href="#botSprig" transform="translate(180,420) rotate(8) scale(0.9)" style="color:#a8695a"/>
+        <use href="#botSprig" transform="translate(70,700) rotate(-10) scale(1.1)" style="color:#8a7a45"/>
+        <use href="#botSprig" transform="translate(200,980) rotate(5) scale(0.95)" style="color:#6f8a5e"/>
+        <use href="#botSprig" transform="translate(80,1260) rotate(-8) scale(1)" style="color:#a8695a"/>
+        <use href="#botSprig" transform="translate(190,1540) rotate(9) scale(0.9)" style="color:#8a7a45"/>
+        <use href="#botSprig" transform="translate(65,1820) rotate(-5) scale(1.05)" style="color:#6f8a5e"/>
+      </g>
+      <g opacity="0.45">
+        <use href="#pineSprig" transform="translate(920,180) rotate(4)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(830,470) rotate(-6) scale(0.85)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(940,760) rotate(5) scale(0.95)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(820,1040) rotate(-4)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(930,1330) rotate(6) scale(0.9)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(840,1620) rotate(-5) scale(1)" style="color:#54728a"/>
+        <use href="#minSnow" transform="translate(870,300) scale(0.9)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(970,610) scale(1.1)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(880,900) scale(0.8)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(960,1200) scale(1)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(870,1490) scale(0.9)" style="color:#7a97a8"/>
+      </g>
+    </svg>
+  </div>
 
   <div class="wrap">
     <p class="eyebrow">Year-round outdoor care</p>
@@ -865,7 +917,25 @@
 
 <!-- ================= SPRING / FALL ================= -->
 <div id="springfall-view" class="view">
-  <div class="home-bg home-bg-spring"></div>
+  <div class="home-bg home-bg-spring">
+    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.45">
+        <use href="#botSprig" transform="translate(60,140) rotate(-6) scale(1.05)" style="color:#6f8a5e"/>
+        <use href="#botSprig" transform="translate(930,260) rotate(8) scale(0.9)" style="color:#a8695a"/>
+        <use href="#botSprig" transform="translate(500,180) rotate(-4) scale(0.85)" style="color:#8a7a45"/>
+        <use href="#botSprig" transform="translate(160,480) rotate(7) scale(0.95)" style="color:#8a7a45"/>
+        <use href="#botSprig" transform="translate(860,520) rotate(-9) scale(1)" style="color:#6f8a5e"/>
+        <use href="#botSprig" transform="translate(70,820) rotate(5) scale(1.1)" style="color:#a8695a"/>
+        <use href="#botSprig" transform="translate(910,860) rotate(-6) scale(0.9)" style="color:#6f8a5e"/>
+        <use href="#botSprig" transform="translate(480,900) rotate(9) scale(0.95)" style="color:#8a7a45"/>
+        <use href="#botSprig" transform="translate(140,1180) rotate(-7) scale(1)" style="color:#a8695a"/>
+        <use href="#botSprig" transform="translate(890,1220) rotate(6) scale(0.9)" style="color:#8a7a45"/>
+        <use href="#botSprig" transform="translate(60,1540) rotate(-5) scale(1.05)" style="color:#6f8a5e"/>
+        <use href="#botSprig" transform="translate(930,1580) rotate(8) scale(0.95)" style="color:#a8695a"/>
+        <use href="#botSprig" transform="translate(500,1900) rotate(-4) scale(0.9)" style="color:#8a7a45"/>
+      </g>
+    </svg>
+  </div>
 
   <div class="wrap">
     <div class="top-row">
@@ -883,7 +953,33 @@
 
 <!-- ================= WINTER ================= -->
 <div id="winter-view" class="view">
-  <div class="home-bg home-bg-winter"></div>
+  <div class="home-bg home-bg-winter">
+    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <g opacity="0.45">
+        <use href="#pineSprig" transform="translate(70,150) rotate(4)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(920,220) rotate(-6) scale(0.85)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(500,120) rotate(5) scale(0.9)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(160,470) rotate(-4) scale(0.95)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(870,510) rotate(6)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(70,820) rotate(-5) scale(0.9)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(910,860) rotate(4) scale(1)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(490,900) rotate(-6) scale(0.85)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(140,1180) rotate(5)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(890,1220) rotate(-4) scale(0.95)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(60,1540) rotate(6) scale(0.9)" style="color:#54728a"/>
+        <use href="#pineSprig" transform="translate(930,1580) rotate(-5)" style="color:#54728a"/>
+        <use href="#minSnow" transform="translate(340,260) scale(0.9)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(680,340) scale(1.1)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(300,620) scale(0.8)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(700,700) scale(1)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(400,980) scale(0.9)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(620,1060) scale(1.05)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(330,1350) scale(0.85)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(670,1420) scale(1)" style="color:#7a97a8"/>
+        <use href="#minSnow" transform="translate(400,1720) scale(0.9)" style="color:#7a97a8"/>
+      </g>
+    </svg>
+  </div>
 
   <div class="wrap">
     <div class="top-row">
