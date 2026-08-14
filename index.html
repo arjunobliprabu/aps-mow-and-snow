@@ -101,7 +101,24 @@
     z-index: 0;
     pointer-events: none;
   }
-  .home-bg svg { display: block; width: 100%; height: 100%; }
+  /* Subtle diagonal mowing-stripe texture (very low contrast — reads
+     as a manicured lawn, not a loud pattern) over a muted gradient.
+     Sage green leans into the lawn-care side, slate blue into winter. */
+  .home-bg-spring {
+    background:
+      repeating-linear-gradient(125deg, rgba(58,84,48,0.05) 0 46px, rgba(58,84,48,0) 46px 92px),
+      linear-gradient(160deg, #d8e5cd 0%, #ecefe3 45%, #f5f1e4 100%);
+  }
+  .home-bg-winter {
+    background:
+      repeating-linear-gradient(125deg, rgba(52,74,96,0.05) 0 46px, rgba(52,74,96,0) 46px 92px),
+      linear-gradient(160deg, #c9d8e5 0%, #e3ecf2 45%, #eff2f1 100%);
+  }
+  .home-bg-split {
+    background:
+      repeating-linear-gradient(125deg, rgba(58,84,48,0.04) 0 46px, rgba(58,84,48,0) 46px 92px),
+      linear-gradient(115deg, #d8e5cd 0%, #ecefe3 34%, #f5f1e4 48%, #f5f1e4 52%, #e3ecf2 66%, #c9d8e5 100%);
+  }
 
   .wrap { max-width: 760px; margin: 0 auto; padding: 60px 24px 90px; }
   .wrap-wide { max-width: 900px; margin: 0 auto; padding: 60px 24px 90px; }
@@ -749,194 +766,7 @@
   <button class="home-cart-widget" onclick="navigateTo('cart-view')">
     🛒 Cart <span class="cart-badge" id="cart-badge-home" style="display:none;"></span>
   </button>
-  <div class="home-bg">
-    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="floralGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#eafbe0"/>
-          <stop offset="55%" stop-color="#fdf6e3"/>
-          <stop offset="100%" stop-color="#fdeef2"/>
-        </linearGradient>
-        <linearGradient id="winterGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#e8f4fb"/>
-          <stop offset="55%" stop-color="#eef6fb"/>
-          <stop offset="100%" stop-color="#dcecf6"/>
-        </linearGradient>
-      </defs>
-
-      <!-- Left half: spring/summer floral background -->
-      <rect x="0" y="0" width="500" height="2200" fill="url(#floralGrad)"/>
-      <!-- Right half: winter background -->
-      <rect x="500" y="0" width="500" height="2200" fill="url(#winterGrad)"/>
-
-      <!-- Grass tufts along the bottom, left side -->
-      <g stroke="#8bc47e" stroke-width="4" stroke-linecap="round" opacity="0.55">
-        <path d="M20,2190 Q25,2150 15,2110"/>
-        <path d="M40,2190 Q48,2145 42,2100"/>
-        <path d="M60,2190 Q55,2150 65,2115"/>
-        <path d="M160,2190 Q168,2150 158,2110"/>
-        <path d="M180,2190 Q186,2145 178,2100"/>
-        <path d="M330,2190 Q338,2150 328,2110"/>
-        <path d="M350,2190 Q356,2145 348,2100"/>
-        <path d="M440,2190 Q448,2150 438,2110"/>
-        <path d="M460,2190 Q466,2145 458,2100"/>
-      </g>
-
-      <!-- Vine squiggle down the far left edge -->
-      <path d="M15,0 Q45,120 15,240 Q-15,360 15,480 Q45,600 15,720 Q-15,840 15,960 Q45,1080 15,1200 Q-15,1320 15,1440 Q45,1560 15,1680 Q-15,1800 15,1920 Q45,2040 15,2160"
-            fill="none" stroke="#8bc47e" stroke-width="5" opacity="0.5"/>
-
-      <!-- Flowers (each: 5 petals + center) -->
-      <g transform="translate(90,180)">
-        <circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/>
-        <circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/>
-        <circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
-      </g>
-      <g transform="translate(300,340) scale(1.2)">
-        <circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/>
-        <circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/>
-        <circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
-      </g>
-      <g transform="translate(150,560)">
-        <circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/>
-        <circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/>
-        <circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/>
-      </g>
-      <g transform="translate(400,750) scale(1.1)">
-        <circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/>
-        <circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/>
-        <circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/>
-      </g>
-      <g transform="translate(80,960)">
-        <circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/>
-        <circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/>
-        <circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
-      </g>
-      <g transform="translate(320,1150) scale(1.2)">
-        <circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/>
-        <circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/>
-        <circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
-      </g>
-      <g transform="translate(160,1370)">
-        <circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/>
-        <circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/>
-        <circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/>
-      </g>
-      <g transform="translate(410,1560) scale(1.1)">
-        <circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/>
-        <circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/>
-        <circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/>
-      </g>
-      <g transform="translate(100,1780)">
-        <circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/>
-        <circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/>
-        <circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
-      </g>
-      <g transform="translate(340,1980) scale(1.15)">
-        <circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/>
-        <circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/>
-        <circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/>
-      </g>
-
-      <!-- Bees -->
-      <g transform="translate(220,260) rotate(-15)">
-        <ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/>
-        <ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/>
-        <ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/>
-        <path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/>
-        <circle cx="10" cy="0" r="3" fill="#2b2b2b"/>
-      </g>
-      <g transform="translate(430,880) rotate(10) scale(0.85)">
-        <ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/>
-        <ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/>
-        <ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/>
-        <path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/>
-        <circle cx="10" cy="0" r="3" fill="#2b2b2b"/>
-      </g>
-      <g transform="translate(120,1480) rotate(-8) scale(0.9)">
-        <ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/>
-        <ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/>
-        <ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/>
-        <path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/>
-        <circle cx="10" cy="0" r="3" fill="#2b2b2b"/>
-      </g>
-
-      <!-- String lights along the top of the winter side -->
-      <path d="M520,40 Q600,90 680,40 T840,40 T980,40" fill="none" stroke="#bcd6e6" stroke-width="3" opacity="0.8"/>
-      <circle cx="560" cy="60" r="7" fill="#ff6b6b"/>
-      <circle cx="640" cy="70" r="7" fill="#5bc27a"/>
-      <circle cx="720" cy="60" r="7" fill="#f7d154"/>
-      <circle cx="800" cy="70" r="7" fill="#6bb4ff"/>
-      <circle cx="880" cy="60" r="7" fill="#ff6b6b"/>
-      <circle cx="950" cy="70" r="7" fill="#5bc27a"/>
-
-      <!-- Snowflakes -->
-      <g stroke="#a9cfe8" stroke-width="4" stroke-linecap="round" opacity="0.9">
-        <g transform="translate(600,220)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(880,380) scale(0.7)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(700,620) scale(1.2)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(950,900)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(600,1080) scale(0.8)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(870,1330)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(650,1600) scale(1.1)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(940,1850) scale(0.75)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-        <g transform="translate(610,2020)">
-          <line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/>
-        </g>
-      </g>
-
-      <!-- Christmas trees -->
-      <g transform="translate(760,500)">
-        <rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/>
-        <polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/>
-        <polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/>
-        <polygon points="0,0 -20,42 20,42" fill="#57995f"/>
-        <circle cx="0" cy="-38" r="5" fill="#f7d154"/>
-        <circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/>
-        <circle cx="12" cy="0" r="3.5" fill="#f7d154"/>
-        <circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/>
-        <circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/>
-      </g>
-      <g transform="translate(890,1120) scale(0.85)">
-        <rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/>
-        <polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/>
-        <polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/>
-        <polygon points="0,0 -20,42 20,42" fill="#57995f"/>
-        <circle cx="0" cy="-38" r="5" fill="#f7d154"/>
-        <circle cx="-10" cy="10" r="3.5" fill="#6bb4ff"/>
-        <circle cx="12" cy="0" r="3.5" fill="#ff6b6b"/>
-        <circle cx="-6" cy="28" r="3.5" fill="#f7d154"/>
-        <circle cx="10" cy="34" r="3.5" fill="#6bb4ff"/>
-      </g>
-      <g transform="translate(600,1750) scale(0.95)">
-        <rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/>
-        <polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/>
-        <polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/>
-        <polygon points="0,0 -20,42 20,42" fill="#57995f"/>
-        <circle cx="0" cy="-38" r="5" fill="#f7d154"/>
-        <circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/>
-        <circle cx="12" cy="0" r="3.5" fill="#f7d154"/>
-        <circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/>
-        <circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/>
-      </g>
-    </svg>
-  </div>
+  <div class="home-bg home-bg-split"></div>
 
   <div class="wrap">
     <p class="eyebrow">Year-round outdoor care</p>
@@ -1035,54 +865,7 @@
 
 <!-- ================= SPRING / FALL ================= -->
 <div id="springfall-view" class="view">
-  <div class="home-bg">
-    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="floralGrad2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#eafbe0"/>
-          <stop offset="55%" stop-color="#fdf6e3"/>
-          <stop offset="100%" stop-color="#fdeef2"/>
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="1000" height="2200" fill="url(#floralGrad2)"/>
-
-      <g stroke="#8bc47e" stroke-width="4" stroke-linecap="round" opacity="0.5">
-        <path d="M20,2190 Q25,2150 15,2110"/>
-        <path d="M40,2190 Q48,2145 42,2100"/>
-        <path d="M160,2190 Q168,2150 158,2110"/>
-        <path d="M330,2190 Q338,2150 328,2110"/>
-        <path d="M440,2190 Q448,2150 438,2110"/>
-        <path d="M560,2190 Q568,2150 558,2110"/>
-        <path d="M690,2190 Q698,2150 688,2110"/>
-        <path d="M820,2190 Q828,2150 818,2110"/>
-        <path d="M940,2190 Q948,2150 938,2110"/>
-      </g>
-      <path d="M15,0 Q45,120 15,240 Q-15,360 15,480 Q45,600 15,720 Q-15,840 15,960 Q45,1080 15,1200 Q-15,1320 15,1440 Q45,1560 15,1680 Q-15,1800 15,1920 Q45,2040 15,2160"
-            fill="none" stroke="#8bc47e" stroke-width="5" opacity="0.4"/>
-      <path d="M985,0 Q955,120 985,240 Q1015,360 985,480 Q955,600 985,720 Q1015,840 985,960 Q955,1080 985,1200 Q1015,1320 985,1440 Q955,1560 985,1680 Q1015,1800 985,1920 Q955,2040 985,2160"
-            fill="none" stroke="#8bc47e" stroke-width="5" opacity="0.4"/>
-
-      <g transform="translate(90,140)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(880,260) scale(1.2)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(500,340)"><circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/><circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/><circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/></g>
-      <g transform="translate(200,520) scale(1.1)"><circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/><circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/><circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/></g>
-      <g transform="translate(800,600)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(80,820)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(650,900) scale(1.2)"><circle cx="10" cy="0" r="9" fill="#ffb0a0"/><circle cx="3" cy="10" r="9" fill="#ffb0a0"/><circle cx="-8" cy="6" r="9" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="9" fill="#ffb0a0"/><circle cx="3" cy="-10" r="9" fill="#ffb0a0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(350,1050)"><circle cx="10" cy="0" r="8" fill="#f7d154"/><circle cx="3" cy="10" r="8" fill="#f7d154"/><circle cx="-8" cy="6" r="8" fill="#f7d154"/><circle cx="-8" cy="-6" r="8" fill="#f7d154"/><circle cx="3" cy="-10" r="8" fill="#f7d154"/><circle cx="0" cy="0" r="6" fill="#fff"/></g>
-      <g transform="translate(920,1180)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(150,1320) scale(1.15)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(600,1450)"><circle cx="10" cy="0" r="8" fill="#ffb0a0"/><circle cx="3" cy="10" r="8" fill="#ffb0a0"/><circle cx="-8" cy="6" r="8" fill="#ffb0a0"/><circle cx="-8" cy="-6" r="8" fill="#ffb0a0"/><circle cx="3" cy="-10" r="8" fill="#ffb0a0"/><circle cx="0" cy="0" r="6" fill="#ffe27a"/></g>
-      <g transform="translate(850,1620) scale(1.1)"><circle cx="10" cy="0" r="9" fill="#f7d154"/><circle cx="3" cy="10" r="9" fill="#f7d154"/><circle cx="-8" cy="6" r="9" fill="#f7d154"/><circle cx="-8" cy="-6" r="9" fill="#f7d154"/><circle cx="3" cy="-10" r="9" fill="#f7d154"/><circle cx="0" cy="0" r="7" fill="#fff"/></g>
-      <g transform="translate(300,1780)"><circle cx="10" cy="0" r="9" fill="#f7a6c4"/><circle cx="3" cy="10" r="9" fill="#f7a6c4"/><circle cx="-8" cy="6" r="9" fill="#f7a6c4"/><circle cx="-8" cy="-6" r="9" fill="#f7a6c4"/><circle cx="3" cy="-10" r="9" fill="#f7a6c4"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-      <g transform="translate(700,1950) scale(1.15)"><circle cx="10" cy="0" r="9" fill="#c8a2e0"/><circle cx="3" cy="10" r="9" fill="#c8a2e0"/><circle cx="-8" cy="6" r="9" fill="#c8a2e0"/><circle cx="-8" cy="-6" r="9" fill="#c8a2e0"/><circle cx="3" cy="-10" r="9" fill="#c8a2e0"/><circle cx="0" cy="0" r="7" fill="#ffe27a"/></g>
-
-      <g transform="translate(220,220) rotate(-15)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
-      <g transform="translate(700,480) rotate(10) scale(0.85)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
-      <g transform="translate(400,1150) rotate(-8) scale(0.9)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
-      <g transform="translate(870,1750) rotate(5) scale(0.95)"><ellipse cx="0" cy="-10" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="9" cy="-8" rx="7" ry="5" fill="#fff" opacity="0.7"/><ellipse cx="0" cy="0" rx="10" ry="7" fill="#f7d154"/><path d="M-8,-4 L8,-4 M-8,0 L8,0 M-8,4 L8,4" stroke="#2b2b2b" stroke-width="2.5"/><circle cx="10" cy="0" r="3" fill="#2b2b2b"/></g>
-    </svg>
-  </div>
+  <div class="home-bg home-bg-spring"></div>
 
   <div class="wrap">
     <div class="top-row">
@@ -1100,49 +883,7 @@
 
 <!-- ================= WINTER ================= -->
 <div id="winter-view" class="view">
-  <div class="home-bg">
-    <svg viewBox="0 0 1000 2200" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="winterGrad2" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#e8f4fb"/>
-          <stop offset="55%" stop-color="#eef6fb"/>
-          <stop offset="100%" stop-color="#dcecf6"/>
-        </linearGradient>
-      </defs>
-      <rect x="0" y="0" width="1000" height="2200" fill="url(#winterGrad2)"/>
-
-      <path d="M40,40 Q140,90 240,40 T440,40 T640,40 T840,40 T1000,40" fill="none" stroke="#bcd6e6" stroke-width="3" opacity="0.8"/>
-      <circle cx="90" cy="60" r="7" fill="#ff6b6b"/><circle cx="180" cy="70" r="7" fill="#5bc27a"/>
-      <circle cx="270" cy="60" r="7" fill="#f7d154"/><circle cx="360" cy="70" r="7" fill="#6bb4ff"/>
-      <circle cx="450" cy="60" r="7" fill="#ff6b6b"/><circle cx="540" cy="70" r="7" fill="#5bc27a"/>
-      <circle cx="630" cy="60" r="7" fill="#f7d154"/><circle cx="720" cy="70" r="7" fill="#6bb4ff"/>
-      <circle cx="810" cy="60" r="7" fill="#ff6b6b"/><circle cx="900" cy="70" r="7" fill="#5bc27a"/>
-
-      <g stroke="#a9cfe8" stroke-width="4" stroke-linecap="round" opacity="0.9">
-        <g transform="translate(150,220)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(500,300) scale(0.7)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(850,260) scale(1.1)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(300,560)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(700,620) scale(1.2)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(950,900)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(100,900) scale(0.8)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(600,1080) scale(0.8)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(870,1330)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(200,1330) scale(0.9)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(650,1600) scale(1.1)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(940,1850) scale(0.75)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(150,1900)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-        <g transform="translate(610,2020)"><line x1="-18" y1="0" x2="18" y2="0"/><line x1="-9" y1="-16" x2="9" y2="16"/><line x1="-9" y1="16" x2="9" y2="-16"/></g>
-      </g>
-
-      <g transform="translate(250,500)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
-      <g transform="translate(760,500)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
-      <g transform="translate(500,1000) scale(0.9)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#6bb4ff"/><circle cx="12" cy="0" r="3.5" fill="#ff6b6b"/><circle cx="-6" cy="28" r="3.5" fill="#f7d154"/><circle cx="10" cy="34" r="3.5" fill="#6bb4ff"/></g>
-      <g transform="translate(890,1120) scale(0.85)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#6bb4ff"/><circle cx="12" cy="0" r="3.5" fill="#ff6b6b"/><circle cx="-6" cy="28" r="3.5" fill="#f7d154"/><circle cx="10" cy="34" r="3.5" fill="#6bb4ff"/></g>
-      <g transform="translate(150,1600) scale(0.95)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
-      <g transform="translate(600,1750) scale(0.95)"><rect x="-6" y="40" width="12" height="18" fill="#8a5a3b"/><polygon points="0,-40 -34,20 34,20" fill="#3f7d4f"/><polygon points="0,-20 -26,32 26,32" fill="#4a8c5b"/><polygon points="0,0 -20,42 20,42" fill="#57995f"/><circle cx="0" cy="-38" r="5" fill="#f7d154"/><circle cx="-10" cy="10" r="3.5" fill="#ff6b6b"/><circle cx="12" cy="0" r="3.5" fill="#f7d154"/><circle cx="-6" cy="28" r="3.5" fill="#6bb4ff"/><circle cx="10" cy="34" r="3.5" fill="#ff6b6b"/></g>
-    </svg>
-  </div>
+  <div class="home-bg home-bg-winter"></div>
 
   <div class="wrap">
     <div class="top-row">
