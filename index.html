@@ -2518,12 +2518,17 @@ function renderCheckout() {
 // backend + webhook setup would.
 const SERVICE_STRIPE_LINKS = {
   "Seasonal Lawn Care Pass": "https://buy.stripe.com/test_3cIeV65Fc0fD7hu8HI0gw0r",
-  "Seasonal snow plan": "https://buy.stripe.com/test_5kQ9AMgjQ2nL9pCcXY0gw02",
-  "Car cleaning (snow)": "https://buy.stripe.com/test_14A3cogjQ7I559mbTU0gw03",
-  "Shoveling snow": "https://buy.stripe.com/test_5kQaEQ7NkbYl7hu3no0gw04",
-  "Snow plowing": "https://buy.stripe.com/test_7sY3co5Fc3rP9pCgaa0gw05",
-  "Seasonal cleanup": "https://buy.stripe.com/test_7sY9AM3x49QdbxK5vw0gw06",
-  "Plant watering": "https://buy.stripe.com/test_eVq5kwebIfax45if660gw07",
+  // The 6 links below don't exist yet in the Stripe dashboard (nothing
+  // was actually created for these), so they're left blank on purpose.
+  // Checkout falls back to a "no payment link yet" message for these
+  // until real Payment Links are created and their URLs are dropped in
+  // here — Venmo still works fine as a fallback in the meantime.
+  "Seasonal snow plan": "",
+  "Car cleaning (snow)": "",
+  "Shoveling snow": "",
+  "Snow plowing": "",
+  "Seasonal cleanup": "",
+  "Plant watering": "",
   // Yard-size services each need their OWN Stripe Payment Link per size,
   // since each size is a different fixed price.
   "Weed whacking (Extra Large)": "https://buy.stripe.com/test_7sY8wI8Rod2p45i5vw0gw0q",
