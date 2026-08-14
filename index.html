@@ -248,6 +248,90 @@
 
   .footnote { margin-top: 24px; color: var(--muted-foreground); font-size: 0.9rem; text-align:center; }
 
+  /* "See the Difference" showcase panel on the home page */
+  .showcase-panel {
+    margin-top: 64px;
+    border-radius: 26px;
+    padding: 52px 40px;
+    text-align: center;
+    background: linear-gradient(135deg, var(--warm-bg) 0%, var(--cool-bg) 100%);
+    border: 1px solid var(--border);
+    box-shadow: 0 28px 60px -32px rgba(0,0,0,0.28);
+  }
+  .showcase-strip {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    margin: 32px 0 10px 0;
+    flex-wrap: wrap;
+  }
+  .showcase-strip img {
+    width: 128px;
+    height: 128px;
+    object-fit: cover;
+    border-radius: 16px;
+    border: 1px solid var(--border);
+    box-shadow: 0 14px 28px -16px rgba(0,0,0,0.35);
+  }
+  @media (max-width: 480px) {
+    .showcase-panel { padding: 40px 22px; }
+    .showcase-strip img { width: 84px; height: 84px; }
+  }
+
+  /* Gallery page intro */
+  .gallery-intro { text-align: center; margin-top: 8px; }
+
+  /* Contact page */
+  .contact-card {
+    margin: 44px auto 0;
+    max-width: 460px;
+    border-radius: 26px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    box-shadow: 0 28px 60px -32px rgba(0,0,0,0.25);
+    padding: 44px 40px;
+  }
+  .contact-name {
+    text-align: center;
+    font-size: 1.7rem;
+    margin: 0 0 30px 0;
+  }
+  .contact-row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 18px 0;
+    border-top: 1px solid var(--border);
+  }
+  .contact-row:first-of-type { border-top: none; padding-top: 0; }
+  .contact-row:last-of-type { padding-bottom: 0; }
+  .contact-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--warm-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .contact-icon svg { width: 20px; height: 20px; }
+  .contact-detail-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--muted-foreground);
+    margin: 0 0 3px 0;
+  }
+  .contact-detail-value {
+    font-size: 1.08rem;
+    color: var(--foreground);
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+  }
+  .contact-detail-value:hover { text-decoration: underline; }
+
   /* Offering list (spring-fall / winter pages) */
   .offering-list { list-style: none; margin: 40px 0 0 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
   .offering {
@@ -888,14 +972,17 @@
       </div>
     </div>
 
-    <div class="before-after-section">
-      <h2 class="font-display" style="font-size:1.8rem; margin:0;">See the Difference</h2>
-      <p class="subtitle" style="margin-top:8px;">A few recent jobs — before we showed up, and after.</p>
-      <button class="pill-btn" style="margin-top:18px;" onclick="navigateTo('gallery-view')">See the Difference →</button>
+    <div class="showcase-panel">
+      <p class="eyebrow">Real Jobs, Real Results</p>
+      <h2 class="font-display" style="font-size:2rem; margin:8px 0 0 0;">See the Difference</h2>
+      <p class="subtitle" style="margin-top:10px;">A few recent jobs — before we showed up, and after.</p>
+      <div class="showcase-strip" id="home-showcase-strip"></div>
+      <button class="pill-btn" style="margin-top:14px;" onclick="navigateTo('gallery-view')">View the Full Gallery →</button>
     </div>
 
     <footer class="home-footer">
       <button class="pill-btn" onclick="navigateTo('about-view')">About the Creator →</button>
+      <button class="pill-btn" style="margin-left:12px;" onclick="navigateTo('contact-view')">Contact Me →</button>
       <p class="footnote">Serving the neighborhood, one season at a time.</p>
     </footer>
   </div>
@@ -905,9 +992,44 @@
 <div id="gallery-view" class="view">
   <div class="wrap">
     <button class="back-link" onclick="navigateTo('home-view')">← Back</button>
+    <p class="eyebrow gallery-intro">Real Jobs, Real Results</p>
     <h1 class="big-title font-display" style="font-size:2.4rem;">See the Difference</h1>
     <p class="subtitle">We work to make your yard look beautiful!</p>
     <div class="before-after-grid" id="before-after-grid" style="margin-top:32px;"></div>
+  </div>
+</div>
+
+<!-- ================= CONTACT ================= -->
+<div id="contact-view" class="view">
+  <div class="wrap">
+    <button class="back-link" onclick="navigateTo('home-view')">← Back</button>
+    <p class="eyebrow">Get In Touch</p>
+    <h1 class="big-title font-display" style="font-size:2.4rem;">Contact Me</h1>
+    <p class="subtitle">Questions, quotes, or scheduling — reach out any time.</p>
+
+    <div class="contact-card">
+      <p class="contact-name font-display">Arjun ObliPrabu</p>
+
+      <div class="contact-row">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div>
+          <p class="contact-detail-label">Phone</p>
+          <a class="contact-detail-value" href="tel:9085664228">908-566-4228</a>
+        </div>
+      </div>
+
+      <div class="contact-row">
+        <div class="contact-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color:var(--primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </div>
+        <div>
+          <p class="contact-detail-label">Email</p>
+          <a class="contact-detail-value" href="mailto:arjun.obliprabu@gmail.com">arjun.obliprabu@gmail.com</a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1524,6 +1646,16 @@ function renderBeforeAfterGallery() {
       </div>
     </div>
   `).join('');
+}
+// Small teaser strip on the home page — just the "after" shot from each
+// yard, as a quick preview before someone clicks through to the full
+// before/after gallery.
+function renderHomeShowcase() {
+  const strip = document.getElementById('home-showcase-strip');
+  if (!strip) return;
+  strip.innerHTML = BEFORE_AFTER_GALLERY.map(y =>
+    `<img src="${y.after}" alt="${y.label} — after">`
+  ).join('');
 }
 
 // Summer hours (through Sept 8): daytime slots. Once the school year
@@ -3408,6 +3540,7 @@ checkForInviteInUrl();
 checkForStripeReturn();
 renderOfferings('springfall-offerings', SPRING_FALL_OFFERINGS, 'warm');
 renderOfferings('winter-offerings', WINTER_OFFERINGS, 'cool');
+renderHomeShowcase();
 refreshCartBadges();
 initCloudSync();
 
