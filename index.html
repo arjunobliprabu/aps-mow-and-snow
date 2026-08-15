@@ -1267,6 +1267,11 @@
       <label class="form-label" for="provider-venmo">Venmo username</label>
       <input class="form-input" id="provider-venmo" type="text" placeholder="@sam-rivera">
       <p class="signin-note" style="margin-top:-8px;">This is how you'll get paid your share of each job.</p>
+
+      <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.85rem;margin:16px 0 4px 0;cursor:pointer;">
+        <input type="checkbox" id="provider-agreement-checkbox" style="width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+        <span>I agree that for every job I complete, <strong>15% goes to AP's Mow and Snow (admin)</strong> and I keep <strong>85%</strong>.</span>
+      </label>
     </div>
 
     <div id="signup-only-fields" style="display:none;">
@@ -1416,6 +1421,11 @@
     <label class="form-label" for="employee-setup-venmo">Venmo username</label>
     <input class="form-input" id="employee-setup-venmo" type="text" placeholder="@sam-rivera">
     <p class="signin-note" style="margin-top:-8px;">This is how you'll get paid your share of each job.</p>
+
+    <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.85rem;margin:16px 0 4px 0;cursor:pointer;">
+      <input type="checkbox" id="employee-setup-agreement-checkbox" style="width:16px;height:16px;flex-shrink:0;margin-top:2px;">
+      <span>I agree that for every job I complete, <strong>15% goes to AP's Mow and Snow (admin)</strong> and I keep <strong>85%</strong>.</span>
+    </label>
 
     <p id="employee-setup-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
 
@@ -1747,6 +1757,7 @@ function openSignInModal(onSuccess, role) {
   document.getElementById('provider-first-name').value = '';
   document.getElementById('provider-last-name').value = '';
   document.getElementById('provider-venmo').value = '';
+  document.getElementById('provider-agreement-checkbox').checked = false;
   document.getElementById('remember-me-checkbox').checked = true;
   document.getElementById('signin-error').style.display = 'none';
   document.getElementById('signin-modal').classList.add('active');
@@ -1939,6 +1950,10 @@ function submitProviderSignUp() {
   }
   if (!venmo) {
     showAuthError("Please enter your Venmo username so you can get paid.");
+    return;
+  }
+  if (!document.getElementById('provider-agreement-checkbox').checked) {
+    showAuthError("Please agree to the 15% / 85% payout split to continue.");
     return;
   }
   if (!venmo.startsWith('@')) venmo = '@' + venmo;
@@ -3096,6 +3111,7 @@ function checkForInviteInUrl() {
   document.getElementById('employee-setup-name').innerText = emp.firstName;
   document.getElementById('employee-setup-password').value = '';
   document.getElementById('employee-setup-venmo').value = '';
+  document.getElementById('employee-setup-agreement-checkbox').checked = false;
   document.getElementById('employee-setup-error').style.display = 'none';
   document.getElementById('employee-setup-modal').classList.add('active');
 }
@@ -3111,6 +3127,11 @@ function submitEmployeeSetup() {
   }
   if (!venmo) {
     errorEl.innerText = "Please enter your Venmo username so you can get paid.";
+    errorEl.style.display = 'block';
+    return;
+  }
+  if (!document.getElementById('employee-setup-agreement-checkbox').checked) {
+    errorEl.innerText = "Please agree to the 15% / 85% payout split to continue.";
     errorEl.style.display = 'block';
     return;
   }
@@ -3232,7 +3253,7 @@ function renderEmployeeDashboard() {
       <div class="appt-row clickable-job" id="worker-job-row-${b.id}" onclick="highlightWorkerJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — you'd earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
+          <p class="meta">${bookingWhenLabel(b)} — you'd earn $${providerCut.toFixed(2)}</p>
         </div>
         ${alreadyRequested
           ? `<span class="meta" style="font-weight:600;">Requested — awaiting approval</span>`
@@ -3255,7 +3276,7 @@ function renderEmployeeDashboard() {
       <div class="appt-row clickable-job" id="worker-job-row-${b.id}" onclick="highlightWorkerJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — you earn $${providerCut.toFixed(2)} (85% of $${b.price})</p>
+          <p class="meta">${bookingWhenLabel(b)} — you earn $${providerCut.toFixed(2)}</p>
         </div>
         <button class="add-btn" onclick="event.stopPropagation(); markJobComplete('${b.id}')">Mark Completed</button>
       </div>
