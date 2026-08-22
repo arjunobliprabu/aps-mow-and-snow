@@ -915,6 +915,34 @@
   </div>
 </div>
 
+<!-- ================= TERMS AND CONDITIONS (Service Providers) ================= -->
+<div id="terms-view" class="view">
+  <div class="wrap">
+    <button class="back-link" onclick="navigateTo('home-view')">← Back</button>
+    <p class="eyebrow">Service Provider Agreement</p>
+    <h1 class="big-title font-display" style="font-size:2.4rem;">Terms and Conditions</h1>
+    <p class="subtitle">Please read before signing up as a service provider.</p>
+
+    <div class="contact-card" style="text-align:left;max-width:600px;">
+      <p style="font-size:0.92rem;color:var(--muted-foreground);line-height:1.7;">
+        <strong style="color:var(--foreground);">1. Payment split.</strong> For every job you complete, 15% goes to TeenTastic Turf (admin) and you keep 85%. Payouts are sent manually via Venmo, typically within 10 days of completing a job.
+      </p>
+      <p style="font-size:0.92rem;color:var(--muted-foreground);line-height:1.7;">
+        <strong style="color:var(--foreground);">2. Doing the work.</strong> You're responsible for showing up on time, completing each job to a professional standard, and letting us know right away if a booking has a problem.
+      </p>
+      <p style="font-size:0.92rem;color:var(--muted-foreground);line-height:1.7;">
+        <strong style="color:var(--foreground);">3. Scheduling.</strong> TeenTastic Turf may reassign or cancel a job if it can't be completed as scheduled.
+      </p>
+      <p style="font-size:0.92rem;color:var(--muted-foreground);line-height:1.7;">
+        <strong style="color:var(--foreground);">4. No guaranteed work.</strong> Signing up doesn't guarantee a minimum number of jobs or a minimum amount of income.
+      </p>
+      <p style="font-size:0.92rem;color:var(--muted-foreground);line-height:1.7;margin-bottom:0;">
+        <strong style="color:var(--foreground);">5. Leaving any time.</strong> You can stop working with TeenTastic Turf whenever you want, and TeenTastic Turf can remove your access whenever it needs to.
+      </p>
+    </div>
+  </div>
+</div>
+
 <!-- ================= SPRING / FALL ================= -->
 <div id="springfall-view" class="view">
   <div class="home-bg home-bg-spring">
@@ -1270,7 +1298,7 @@
 
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.85rem;margin:16px 0 4px 0;cursor:pointer;">
         <input type="checkbox" id="provider-agreement-checkbox" style="width:16px;height:16px;flex-shrink:0;margin-top:2px;">
-        <span>I agree to the <a href="#" onclick="event.preventDefault(); openTermsModal();" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
+        <span>I agree to the <a href="?terms=1" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
       </label>
     </div>
 
@@ -1409,22 +1437,6 @@
   </div>
 </div>
 
-<!-- ================= TERMS AND CONDITIONS MODAL (Service Providers) ================= -->
-<div class="modal-overlay" id="terms-modal" onclick="if(event.target===this) closeTermsModal();">
-  <div class="modal-box" style="max-width:520px;max-height:80vh;overflow-y:auto;text-align:left;">
-    <button class="modal-close-btn" onclick="closeTermsModal()" title="Close">✕</button>
-    <h2 class="modal-title font-display" style="font-size:1.4rem;">Terms and Conditions</h2>
-    <div style="font-size:0.88rem;color:var(--muted-foreground);line-height:1.65;">
-      <p><strong style="color:var(--foreground);">1. Payment split.</strong> For every job you complete, 15% goes to TeenTastic Turf (admin) and you keep 85%. Payouts are sent manually via Venmo, typically within 10 days of completing a job.</p>
-      <p><strong style="color:var(--foreground);">2. Doing the work.</strong> You're responsible for showing up on time, completing each job to a professional standard, and letting us know right away if a booking has a problem.</p>
-      <p><strong style="color:var(--foreground);">3. Scheduling.</strong> TeenTastic Turf may reassign or cancel a job if it can't be completed as scheduled.</p>
-      <p><strong style="color:var(--foreground);">4. No guaranteed work.</strong> Signing up doesn't guarantee a minimum number of jobs or a minimum amount of income.</p>
-      <p><strong style="color:var(--foreground);">5. Leaving any time.</strong> You can stop working with TeenTastic Turf whenever you want, and TeenTastic Turf can remove your access whenever it needs to.</p>
-    </div>
-    <button class="pill-btn full-btn" type="button" onclick="closeTermsModal()" style="margin-top:16px;">Close</button>
-  </div>
-</div>
-
 <!-- ================= EMPLOYEE SET PASSWORD (INVITE ACCEPT) MODAL ================= -->
 <div class="modal-overlay" id="employee-setup-modal">
   <div class="modal-box" style="max-width:380px;">
@@ -1440,7 +1452,7 @@
 
     <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.85rem;margin:16px 0 4px 0;cursor:pointer;">
       <input type="checkbox" id="employee-setup-agreement-checkbox" style="width:16px;height:16px;flex-shrink:0;margin-top:2px;">
-      <span>I agree to the <a href="#" onclick="event.preventDefault(); openTermsModal();" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
+      <span>I agree to the <a href="?terms=1" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
     </label>
 
     <p id="employee-setup-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
@@ -3339,11 +3351,10 @@ function markJobComplete(bookingId) {
 function closeJobCompleteModal() {
   document.getElementById('job-complete-modal').classList.remove('active');
 }
-function openTermsModal() {
-  document.getElementById('terms-modal').classList.add('active');
-}
-function closeTermsModal() {
-  document.getElementById('terms-modal').classList.remove('active');
+function checkForTermsInUrl() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('terms') !== '1') return;
+  navigateTo('terms-view');
 }
 
 let pendingDeleteEmail = null;
@@ -3422,6 +3433,7 @@ document.addEventListener('keydown', (e) => {
 });
 renderAccountWidget();
 checkForInviteInUrl();
+checkForTermsInUrl();
 checkForStripeReturn();
 renderOfferings('springfall-offerings', SPRING_FALL_OFFERINGS, 'warm');
 renderOfferings('winter-offerings', WINTER_OFFERINGS, 'cool');
