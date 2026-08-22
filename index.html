@@ -3306,7 +3306,10 @@ function renderEmployeeDashboard() {
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
           <p class="meta">${bookingWhenLabel(b)} — you earn $${providerCut.toFixed(2)}</p>
         </div>
-        <button class="add-btn" onclick="event.stopPropagation(); markJobComplete('${b.id}')">Mark Completed</button>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+          <button class="add-btn" onclick="event.stopPropagation(); markJobComplete('${b.id}')">Mark Completed</button>
+          <button class="remove-btn" style="margin-top:0;" onclick="event.stopPropagation(); providerCancelJob('${b.id}')">Cancel job</button>
+        </div>
       </div>
     `;
     }).join('');
@@ -3350,6 +3353,36 @@ function markJobComplete(bookingId) {
 }
 function closeJobCompleteModal() {
   document.getElementById('job-complete-modal').classList.remove('active');
+}
+// Combines a booking's dateISO + time slot (e.g. "5 PM") into a real
+// Date object, so it can be compared against right now.
+function bookingDateTime(booking) {
+  const [y, m, d] = booking.dateISO.split('-').map(Number);
+  const match = /^(\d+)\s*(AM|PM)$/i.exec((booking.time || '').trim());
+  let hour = 0;
+  if (match) {
+    hour = parseInt(match[1], 10) % 12;
+    if (/PM/i.test(match[2])) hour += 12;
+  }
+  return new Date(y, m - 1, d, hour, 0, 0);
+}
+// A service provider can back out of a job they've been approved for,
+// but only up until 24 hours before it's scheduled to start — after
+// that it's too close to the appointment to leave the customer without
+// coverage, so it needs to go through admin instead.
+function providerCancelJob(bookingId) {
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId);
+  if (!booking) return;
+  const hoursUntil = (bookingDateTime(booking) - new Date()) / (1000 * 60 * 60);
+  if (hoursUntil < 24) {
+    showToast("This job starts within 24 hours, so it can't be cancelled here anymore — please contact admin directly.");
+    return;
+  }
+  booking.assignedProviderEmail = undefined;
+  writeStore(BOOKINGS_KEY, bookings);
+  renderEmployeeDashboard();
+  showToast('Job cancelled — it\'s back in Open Jobs for another provider to pick up.');
 }
 function checkForTermsInUrl() {
   const params = new URLSearchParams(location.search);
