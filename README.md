@@ -1,4 +1,4 @@
-# TeenTastic Turf
+# AP Mow and Snow
 
 A single-file web app for a seasonal lawn mowing and snow removal business — built by Arjun ObliPrabu.
 
