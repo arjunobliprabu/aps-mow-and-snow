@@ -1615,7 +1615,13 @@ const CLOUD_SYNCED_KEYS = {
 function cloudSyncPush(key, value) {
   const docName = CLOUD_SYNCED_KEYS[key];
   if (!docName || !firestoreDb) return;
-  firestoreDb.collection('shared').doc(docName).set({ data: value, updatedAt: Date.now() })
+  const updatedAt = Date.now();
+  // Remember that THIS device just pushed this timestamp, so if a
+  // delayed/stale snapshot with an older timestamp arrives later, the
+  // listener below knows to ignore it instead of clobbering a newer
+  // local change (e.g. clicking Undo right after Mark Completed).
+  try { localStorage.setItem(key + '.syncedAt', String(updatedAt)); } catch (e) {}
+  firestoreDb.collection('shared').doc(docName).set({ data: value, updatedAt })
     .catch(err => console.warn('Cloud sync push failed — change saved on this device only.', err));
 }
 
@@ -1625,6 +1631,12 @@ function initCloudSync() {
     firestoreDb.collection('shared').doc(docName).onSnapshot(snap => {
       if (!snap.exists) return;
       const remote = snap.data().data;
+      const remoteUpdatedAt = snap.data().updatedAt || 0;
+      const lastLocalPush = Number(localStorage.getItem(localKey + '.syncedAt') || 0);
+      // If this remote update is older than (or the same as) the last
+      // change THIS device pushed, it's a stale/out-of-order echo —
+      // applying it would silently undo whatever was just changed here.
+      if (remoteUpdatedAt < lastLocalPush) return;
       const current = readStore(localKey, null);
       if (JSON.stringify(remote) === JSON.stringify(current)) return; // nothing changed, skip a redundant re-render
       try { localStorage.setItem(localKey, JSON.stringify(remote)); } catch (e) {}
@@ -2960,7 +2972,10 @@ function renderAdminDashboard() {
 // each with an Undo button in case a job was completed by mistake.
 function renderAdminCompletedLists(bookings) {
   const completed = bookings.filter(b => b.completed);
-  const byAdmin = completed.filter(b => b.completedBy === 'admin');
+  // Bookings completed before this admin/provider split existed won't
+  // have a completedBy value — treat those as admin-completed rather
+  // than letting them silently vanish from both lists.
+  const byAdmin = completed.filter(b => !b.completedBy || b.completedBy === 'admin');
   const byProvider = completed.filter(b => b.completedBy && b.completedBy !== 'admin');
 
   const adminList = document.getElementById('admin-completed-list');
