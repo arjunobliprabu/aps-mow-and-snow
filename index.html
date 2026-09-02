@@ -1190,6 +1190,17 @@
     </section>
 
     <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">Completed Services</h2>
+      <p class="signin-note" style="margin-top:8px;">Jobs move here once marked completed. Made a mistake? Undo puts a job back in the active list.</p>
+
+      <h3 class="font-display" style="font-size:1.15rem;margin-top:24px;">Completed by Admin</h3>
+      <div id="admin-completed-list" style="margin-top:12px;"></div>
+
+      <h3 class="font-display" style="font-size:1.15rem;margin-top:24px;">Completed by Service Providers</h3>
+      <div id="provider-completed-list" style="margin-top:12px;"></div>
+    </section>
+
+    <section style="margin-top:40px;">
       <h2 class="font-display" style="font-size:1.6rem;">Customers</h2>
       <div id="admin-customers-list" style="margin-top:16px;"></div>
     </section>
@@ -1238,6 +1249,11 @@
     <section style="margin-top:40px;">
       <h2 class="font-display" style="font-size:1.6rem;">My active jobs</h2>
       <div id="employee-active-jobs-list" style="margin-top:16px;"></div>
+    </section>
+
+    <section style="margin-top:40px;">
+      <h2 class="font-display" style="font-size:1.6rem;">My completed jobs</h2>
+      <div id="employee-completed-jobs-list" style="margin-top:16px;"></div>
     </section>
   </div>
 </div>
@@ -2875,18 +2891,17 @@ function renderAdminDashboard() {
   document.getElementById('admin-stat-revenue').innerText = `$${revenue.toFixed(2)}`;
 
   const bookingsList = document.getElementById('admin-bookings-list');
-  if (bookings.length === 0) {
-    bookingsList.innerHTML = '<p style="color:var(--muted-foreground);">No bookings yet.</p>';
+  const activeBookings = bookings.filter(b => !b.completed);
+  if (activeBookings.length === 0) {
+    bookingsList.innerHTML = '<p style="color:var(--muted-foreground);">No active bookings right now.</p>';
   } else {
-    bookingsList.innerHTML = bookings.map(b => {
+    bookingsList.innerHTML = activeBookings.map(b => {
       let statusNote = '';
       let priceLabel = `$${b.price}`;
       if (b.assignedProviderEmail) {
         const { adminCut } = splitJobPrice(b.price);
         priceLabel = `$${adminCut.toFixed(2)} <span style="font-weight:400;color:var(--muted-foreground);font-size:0.75rem;">(your 15% of $${b.price})</span>`;
-        statusNote = b.completed
-          ? ` — ✓ completed by ${b.assignedProviderEmail}`
-          : ` — assigned to ${b.assignedProviderEmail}`;
+        statusNote = ` — assigned to ${b.assignedProviderEmail}`;
       }
       return `
       <div class="appt-row clickable-job" id="admin-job-row-${b.id}" onclick="highlightAdminJob('${b.id}')">
@@ -2896,7 +2911,10 @@ function renderAdminDashboard() {
         </div>
         <div style="text-align:right;">
           <p style="font-weight:500;margin:0 0 6px 0;">${priceLabel}</p>
-          <button class="remove-btn" onclick="event.stopPropagation(); openCancelBookingModal('${b.id}')">Cancel</button>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <button class="add-btn" onclick="event.stopPropagation(); adminMarkJobComplete('${b.id}')">Mark Completed</button>
+            <button class="remove-btn" style="margin-top:0;" onclick="event.stopPropagation(); openCancelBookingModal('${b.id}')">Cancel</button>
+          </div>
         </div>
       </div>
     `;
@@ -2906,6 +2924,7 @@ function renderAdminDashboard() {
   }
 
   renderAdminJobRequests(bookings);
+  renderAdminCompletedLists(bookings);
 
   const customersList = document.getElementById('admin-customers-list');
   // Only customers who've actually completed a purchase show up here —
@@ -2936,6 +2955,64 @@ function renderAdminDashboard() {
   renderAdminMap();
 }
 
+// Splits completed jobs into two lists — ones the admin marked complete
+// directly, and ones a service provider marked complete themselves —
+// each with an Undo button in case a job was completed by mistake.
+function renderAdminCompletedLists(bookings) {
+  const completed = bookings.filter(b => b.completed);
+  const byAdmin = completed.filter(b => b.completedBy === 'admin');
+  const byProvider = completed.filter(b => b.completedBy && b.completedBy !== 'admin');
+
+  const adminList = document.getElementById('admin-completed-list');
+  adminList.innerHTML = byAdmin.length === 0
+    ? '<p style="color:var(--muted-foreground);">No jobs completed by admin yet.</p>'
+    : byAdmin.map(b => `
+      <div class="appt-row">
+        <div>
+          <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}</p>
+        </div>
+        <button class="remove-btn" onclick="undoJobComplete('${b.id}')">Undo</button>
+      </div>
+    `).join('');
+
+  const providerList = document.getElementById('provider-completed-list');
+  providerList.innerHTML = byProvider.length === 0
+    ? '<p style="color:var(--muted-foreground);">No jobs completed by a service provider yet.</p>'
+    : byProvider.map(b => `
+      <div class="appt-row">
+        <div>
+          <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email} — completed by ${b.completedBy}</p>
+        </div>
+        <button class="remove-btn" onclick="undoJobComplete('${b.id}')">Undo</button>
+      </div>
+    `).join('');
+}
+// Lets admin mark a job complete directly (e.g. one done in-house with
+// no service provider assigned).
+function adminMarkJobComplete(bookingId) {
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId);
+  if (!booking) return;
+  booking.completed = true;
+  booking.completedBy = 'admin';
+  writeStore(BOOKINGS_KEY, bookings);
+  renderAdminDashboard();
+  showToast('Job marked completed.');
+}
+// Undoes a completed job (admin or provider) back into the active list —
+// for when a job was marked completed by mistake.
+function undoJobComplete(bookingId) {
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId);
+  if (!booking) return;
+  booking.completed = false;
+  booking.completedBy = undefined;
+  writeStore(BOOKINGS_KEY, bookings);
+  renderAdminDashboard();
+  showToast('Job moved back to active bookings.');
+}
 function renderAdminJobRequests(bookings) {
   const list = document.getElementById('admin-job-requests-list');
   const withRequests = bookings.filter(b => !b.assignedProviderEmail && (b.jobRequests || []).length > 0);
@@ -3315,6 +3392,26 @@ function renderEmployeeDashboard() {
     }).join('');
   }
 
+  // Jobs this provider has personally completed — read-only record, no
+  // undo here (that's an admin-only safeguard, in the admin dashboard).
+  const myCompletedJobs = bookings.filter(b => b.assignedProviderEmail === email && b.completed);
+  const myCompletedList = document.getElementById('employee-completed-jobs-list');
+  if (myCompletedJobs.length === 0) {
+    myCompletedList.innerHTML = '<p style="color:var(--muted-foreground);">No completed jobs yet.</p>';
+  } else {
+    myCompletedList.innerHTML = myCompletedJobs.map(b => {
+      const { providerCut } = splitJobPrice(b.price);
+      return `
+      <div class="appt-row">
+        <div>
+          <p style="margin:0;font-weight:500;">${b.serviceName}</p>
+          <p class="meta">${bookingWhenLabel(b)} — you earned $${providerCut.toFixed(2)}</p>
+        </div>
+      </div>
+    `;
+    }).join('');
+  }
+
   renderWorkerMap([...openJobs, ...myJobs]);
   if (selectedWorkerJobId) highlightWorkerJob(selectedWorkerJobId);
 
@@ -3344,6 +3441,7 @@ function markJobComplete(bookingId) {
   const booking = bookings.find(b => b.id === bookingId);
   if (!booking) return;
   booking.completed = true;
+  booking.completedBy = booking.assignedProviderEmail;
   writeStore(BOOKINGS_KEY, bookings);
   renderEmployeeDashboard(); // re-renders the worker map too, which drops completed jobs' pins
 
