@@ -1122,6 +1122,7 @@
           Only one service can be paid for at a time right now. Please go back to your cart and remove all but one item before continuing.
         </div>
         <button class="pill-btn full-btn" type="button" style="background:#3D95CE;" onclick="openVenmoPayModal()">Continue with Venmo</button>
+        <button class="pill-btn full-btn" type="button" style="background:var(--secondary);color:var(--foreground);border:1px solid var(--border);margin-top:12px;" onclick="payByCash()">Will pay by cash</button>
       </div>
     </div>
     </div>
@@ -1136,6 +1137,7 @@
       <p class="eyebrow" style="margin-top:20px;">Your booking is confirmed</p>
       <h1 class="big-title font-display">Thank you!</h1>
       <p class="subtitle">We'll see you on the date(s) below. A receipt has been "sent" to your email.</p>
+      <p class="subtitle" style="margin-top:10px;">Somebody will show up at the time for the service.</p>
     </div>
 
     <section style="margin-top:50px;">
@@ -2224,6 +2226,11 @@ function prettyDate(iso) {
 function bookingWhenLabel(b) {
   return b.isPass ? 'Weekly — full season' : `${prettyDate(b.dateISO)} · ${b.time}`;
 }
+function paymentInfoLabel(b) {
+  if (b.customerVenmo) return ` — Venmo: ${b.customerVenmo}`;
+  if (b.paymentMethod === 'cash') return ` — Payment: Cash`;
+  return '';
+}
 
 /* ============================================================
    NAVIGATION
@@ -2739,6 +2746,34 @@ function submitVenmoPayment() {
   }
 }
 
+// Same stacking logic as Venmo/Stripe, but for a customer saying they'll
+// pay in person, in cash, at the time of service — no payment info to
+// collect up front, just confirms the booking straight away.
+function payByCash() {
+  const paidItem = confirmNextCartItemAsBooking();
+  if (!paidItem) return;
+
+  // Record that this booking is a cash payment, so admin can see that on
+  // the admin dashboard alongside Venmo-paid bookings.
+  const bookings = getBookings();
+  const savedBooking = bookings.find(b => b.id === paidItem.id);
+  if (savedBooking) {
+    savedBooking.paymentMethod = 'cash';
+    writeStore(BOOKINGS_KEY, bookings);
+  }
+
+  const email = getCurrentUser();
+  const stillPending = getCart().filter(c => c.email === email);
+  if (stillPending.length > 0) {
+    renderCheckout();
+    showToast(`Got it — you'll pay for ${paidItem.serviceName} in cash. ${stillPending.length} more service${stillPending.length > 1 ? 's' : ''} to go — confirm the next one below.`);
+  } else {
+    renderConfirmation();
+    navigateTo('confirmation-view');
+    showToast(`Got it — you'll pay in cash at the time of service.`);
+  }
+}
+
 function handlePay() {
   const email = getCurrentUser();
   const cart = getCart().filter(c => c.email === email);
@@ -2988,7 +3023,7 @@ function renderAdminDashboard() {
       <div class="appt-row clickable-job" id="admin-job-row-${b.id}" onclick="highlightAdminJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''}${statusNote}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${paymentInfoLabel(b)}${statusNote}</p>
         </div>
         <div style="text-align:right;">
           <p style="font-weight:500;margin:0 0 6px 0;">${priceLabel}</p>
@@ -3054,7 +3089,7 @@ function renderAdminCompletedLists(bookings) {
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${paymentInfoLabel(b)}</p>
         </div>
         <button class="remove-btn" onclick="undoJobComplete('${b.id}')">Undo</button>
       </div>
@@ -3067,7 +3102,7 @@ function renderAdminCompletedLists(bookings) {
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''} — completed by ${b.completedBy}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${paymentInfoLabel(b)} — completed by ${b.completedBy}</p>
         </div>
         <button class="remove-btn" onclick="undoJobComplete('${b.id}')">Undo</button>
       </div>
@@ -3124,7 +3159,7 @@ function renderAdminJobRequests(bookings) {
       <div class="appt-row" style="flex-direction:column;align-items:stretch;">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${paymentInfoLabel(b)}</p>
       </div>
     `;
   }).join('');
