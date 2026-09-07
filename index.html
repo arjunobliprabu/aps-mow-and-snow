@@ -1665,7 +1665,16 @@ function cloudSyncPush(key, value) {
   // local change (e.g. clicking Undo right after Mark Completed).
   try { localStorage.setItem(key + '.syncedAt', String(updatedAt)); } catch (e) {}
   firestoreDb.collection('shared').doc(docName).set({ data: value, updatedAt })
-    .catch(err => console.warn('Cloud sync push failed — change saved on this device only.', err));
+    .catch(err => {
+      console.warn('Cloud sync push failed — change saved on this device only.', err);
+      // This is the important part: without this, a failed cloud save is
+      // invisible — the change looks like it worked (it's saved locally
+      // and the screen updates right away) but silently never reaches
+      // other devices, and can even get reverted here on a future page
+      // load once a stale cloud snapshot comes back down. Telling the
+      // person immediately is the only way they'd know to fix it.
+      showToast('This change saved on this device, but the cloud sync failed — it may not show up on other devices. Check your Firestore rules haven\'t expired.');
+    });
 }
 
 function initCloudSync() {
