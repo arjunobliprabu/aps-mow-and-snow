@@ -55,6 +55,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
 
+<!-- EmailJS: sends real emails (booking confirmations, completions,
+     cancellations) straight from the browser — no backend needed. -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
 <style>
   :root {
     --radius: 0.75rem;
@@ -1647,6 +1651,41 @@ try {
   console.warn("Cloud sync unavailable — this device will only see its own local data.", e);
 }
 
+// ============================================================
+// EMAIL (EmailJS)
+// ============================================================
+// Sends real emails for booking confirmations, completions, and
+// cancellations — straight from the browser, no backend needed.
+// The free EmailJS plan only allows 2 templates, so instead of one
+// template per event, there are 2 GENERIC templates (one for
+// "good news" style emails, one for "cancelled" style emails), each
+// with just {{to_name}}, {{subject}}, {{message}} placeholders. The
+// actual subject/message text for every event gets built here in code
+// and dropped into whichever of the 2 templates fits.
+const EMAILJS_PUBLIC_KEY = "v-MajwI62ik8VYXwG";
+const EMAILJS_SERVICE_ID = "service_iprse6s";
+const EMAILJS_TEMPLATE_GOOD_NEWS = "template_63pkwii";   // booking confirmed / job completed
+const EMAILJS_TEMPLATE_CANCELLED = "template_w129rr2";   // booking cancelled / job cancelled
+try {
+  if (typeof emailjs !== 'undefined') {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  }
+} catch (e) {
+  console.warn("Email sending unavailable — EmailJS failed to load.", e);
+}
+// toEmail/toName: who receives it. subject/message: the actual content.
+// kind: 'good' or 'cancelled', picks which of the 2 templates to use.
+function sendEmail(toEmail, toName, subject, message, kind) {
+  if (typeof emailjs === 'undefined' || !toEmail) return;
+  const templateId = kind === 'cancelled' ? EMAILJS_TEMPLATE_CANCELLED : EMAILJS_TEMPLATE_GOOD_NEWS;
+  emailjs.send(EMAILJS_SERVICE_ID, templateId, {
+    to_email: toEmail,
+    to_name: toName || toEmail,
+    subject: subject,
+    message: message
+  }).catch(err => console.warn('Email failed to send.', err));
+}
+
 // Which local storage keys are mirrored to the cloud, and the
 // Firestore document name each one lives under.
 const CLOUD_SYNCED_KEYS = {
@@ -2222,6 +2261,15 @@ function confirmNextCartItemAsBooking() {
   writeStore(BOOKINGS_KEY, [...getBookings(), newBooking]);
   cart.splice(mineIndex, 1);
   writeStore(CART_KEY, cart);
+
+  sendEmail(
+    newBooking.email,
+    customerDisplayName(newBooking.email),
+    `Your booking with TeenTastic Turf is confirmed!`,
+    `Your booking is confirmed! Here are the details:\n\nService: ${newBooking.serviceName}\n${bookingWhenLabel(newBooking)}\nPrice: $${newBooking.price}\n\nSomebody will show up at the time above for your service. If anything changes, we'll reach out.\n\nThanks for booking with us!`,
+    'good'
+  );
+
   return newBooking;
 }
 function formatDateISO(y, m, d) {
@@ -3119,6 +3167,28 @@ function renderAdminCompletedLists(bookings) {
 }
 // Lets admin mark a job complete directly (e.g. one done in-house with
 // no service provider assigned).
+// Sends "job completed" emails — to the customer always, and to the
+// assigned provider too (with their payout amount) if there is one.
+function sendJobCompletedEmails(booking) {
+  sendEmail(
+    booking.email,
+    customerDisplayName(booking.email),
+    `Your ${booking.serviceName} is done!`,
+    `Just letting you know your service has been completed:\n\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nThanks for choosing TeenTastic Turf — we hope your yard looks great! If you have any questions or notice anything that needs attention, just reply to this email.`,
+    'good'
+  );
+  if (booking.assignedProviderEmail) {
+    const provider = findEmployee(booking.assignedProviderEmail);
+    const { providerCut } = splitJobPrice(booking.price);
+    sendEmail(
+      booking.assignedProviderEmail,
+      provider ? provider.firstName : booking.assignedProviderEmail,
+      `Job completed — payout coming your way`,
+      `Nice work! This job has been marked completed:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\nYour payout: $${providerCut.toFixed(2)}\n\nAdmin will send your payout via Venmo within 10 days.`,
+      'good'
+    );
+  }
+}
 function adminMarkJobComplete(bookingId) {
   const bookings = getBookings();
   const booking = bookings.find(b => b.id === bookingId);
@@ -3128,6 +3198,7 @@ function adminMarkJobComplete(bookingId) {
   writeStore(BOOKINGS_KEY, bookings);
   renderAdminDashboard();
   showToast('Job marked completed.');
+  sendJobCompletedEmails(booking);
 }
 // Undoes a completed job (admin or provider) back into the active list —
 // for when a job was marked completed by mistake.
@@ -3584,6 +3655,7 @@ function markJobComplete(bookingId) {
   booking.completedBy = booking.assignedProviderEmail;
   writeStore(BOOKINGS_KEY, bookings);
   renderEmployeeDashboard(); // re-renders the worker map too, which drops completed jobs' pins
+  sendJobCompletedEmails(booking);
 
   document.getElementById('job-complete-text').innerHTML =
     `For customer <strong>${customerDisplayName(booking.email)}</strong>, admin will pay you in the next 10 days.`;
@@ -3694,6 +3766,24 @@ function confirmCancelBooking() {
   closeCancelBookingModal();
   renderAdminDashboard();
   showToast(`Booking cancelled — $${booking.price} refunded to ${booking.email}`);
+
+  sendEmail(
+    booking.email,
+    customerDisplayName(booking.email),
+    `Your booking has been cancelled`,
+    `Your booking has been cancelled:\n\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nIf you paid for this service, your payment will be refunded. If you have any questions, just reply to this email.`,
+    'cancelled'
+  );
+  if (booking.assignedProviderEmail) {
+    const provider = findEmployee(booking.assignedProviderEmail);
+    sendEmail(
+      booking.assignedProviderEmail,
+      provider ? provider.firstName : booking.assignedProviderEmail,
+      `A job on your schedule was cancelled`,
+      `Just a heads-up — this job has been cancelled and is no longer on your schedule:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nNo action needed on your end. Check Open Jobs for other available work.`,
+      'cancelled'
+    );
+  }
 }
 
 /* ============================================================
