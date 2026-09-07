@@ -1116,15 +1116,12 @@
         </div>
 
         <p style="color:var(--muted-foreground);font-size:0.9rem;line-height:1.5;">
-          Choose how you'd like to pay. You'll be brought back here automatically once payment is complete.
+          Pay with Venmo below. You'll be brought back here automatically once payment is complete.
         </p>
         <div id="checkout-multi-warning" style="display:none;background:#fdecea;border:1px solid #f3b9b0;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#8a2f24;font-size:0.85rem;">
           Only one service can be paid for at a time right now. Please go back to your cart and remove all but one item before continuing.
         </div>
-        <button class="pill-btn full-btn" type="button" id="pay-btn" onclick="handlePay()">Continue with Stripe — <span id="pay-btn-amount">$0</span></button>
-        <p class="fine-print" style="margin-top:6px;">Also accepts Cash App Pay, Apple Pay, and Klarna, if enabled.</p>
-        <button class="pill-btn full-btn" type="button" style="background:#3D95CE;margin-top:14px;" onclick="openVenmoPayModal()">Continue with Venmo</button>
-        <p class="fine-print">Venmo payments are handled separately and are not processed through Stripe.</p>
+        <button class="pill-btn full-btn" type="button" style="background:#3D95CE;" onclick="openVenmoPayModal()">Continue with Venmo</button>
       </div>
     </div>
     </div>
@@ -1437,17 +1434,26 @@
 <div class="modal-overlay" id="customer-venmo-modal" onclick="if(event.target===this) closeVenmoPayModal();">
   <div class="modal-box" style="max-width:380px;text-align:center;">
     <button class="modal-close-btn" onclick="closeVenmoPayModal()" title="Close">✕</button>
-    <h2 class="modal-title font-display" style="font-size:1.4rem;">Pay with Venmo</h2>
-    <p class="modal-sub">Send <strong id="venmo-owner-amount">$0</strong> to our Venmo:</p>
-    <p class="font-display" style="font-size:1.6rem;margin:6px 0 18px 0;">
-      <a id="venmo-owner-link" href="https://venmo.com/u/arjun-obliprabu" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">@arjun-obliprabu</a>
-    </p>
-    <p class="signin-note" style="margin-top:-10px;margin-bottom:16px;">Tap the link above — it opens Venmo with the amount and note already filled in.</p>
-    <label class="form-label" for="customer-venmo-handle">Your Venmo username</label>
-    <input class="form-input" id="customer-venmo-handle" type="text" placeholder="@your-venmo">
-    <p id="customer-venmo-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
-    <button class="pill-btn full-btn" style="background:#3D95CE;" type="button" onclick="submitVenmoPayment()">I've Sent the Payment</button>
-    <p class="signin-note" style="margin-top:12px;">We'll confirm your payment manually and follow up to finalize your booking.</p>
+
+    <div id="venmo-step-pay">
+      <h2 class="modal-title font-display" style="font-size:1.4rem;">Pay with Venmo</h2>
+      <p class="modal-sub">Send <strong id="venmo-owner-amount">$0</strong> to our Venmo:</p>
+      <p class="font-display" style="font-size:1.6rem;margin:6px 0 18px 0;">
+        <a id="venmo-owner-link" href="https://venmo.com/u/arjun-obliprabu" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;">@arjun-obliprabu</a>
+      </p>
+      <p class="signin-note" style="margin-top:-10px;margin-bottom:28px;">Tap the link above — it opens Venmo with the amount and note already filled in. Once you've sent it, come back here.</p>
+      <button class="pill-btn full-btn" style="background:#3D95CE;" type="button" onclick="goToVenmoUsernameStep()">Sent the payment! →</button>
+    </div>
+
+    <div id="venmo-step-username" style="display:none;">
+      <h2 class="modal-title font-display" style="font-size:1.4rem;">What's your Venmo username?</h2>
+      <p class="modal-sub">So we can match your payment to this order.</p>
+      <label class="form-label" for="customer-venmo-handle">Your Venmo username</label>
+      <input class="form-input" id="customer-venmo-handle" type="text" placeholder="@your-venmo">
+      <p id="customer-venmo-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
+      <button class="pill-btn full-btn" style="background:#3D95CE;" type="button" onclick="submitVenmoPayment()">Confirm</button>
+      <p class="signin-note" style="margin-top:12px;">We'll confirm your payment manually and follow up to finalize your booking.</p>
+    </div>
   </div>
 </div>
 
@@ -2607,22 +2613,16 @@ function renderCheckout() {
   });
   document.getElementById('checkout-total').innerText = `$${total}`;
 
-  // The Pay button only ever charges the NEXT item in line — multiple
-  // services are paid one real Stripe transaction at a time.
-  document.getElementById('pay-btn-amount').innerText = `$${cart[0].price}`;
-
   const warningEl = document.getElementById('checkout-multi-warning');
   if (cart.length > 1) {
     warningEl.style.display = 'block';
     warningEl.style.background = 'var(--secondary)';
     warningEl.style.color = 'var(--foreground)';
     warningEl.style.borderColor = 'var(--border)';
-    warningEl.innerHTML = `You have <strong>${cart.length} services</strong> in this order. Stripe only charges one at a time, so you'll pay for "<strong>${cart[0].serviceName}</strong>" ($${cart[0].price}) now, then come right back here to pay for the rest.`;
+    warningEl.innerHTML = `You have <strong>${cart.length} services</strong> in this order. Payments are handled one at a time, so you'll pay for "<strong>${cart[0].serviceName}</strong>" ($${cart[0].price}) now, then come right back here to pay for the rest.`;
   } else {
     warningEl.style.display = 'none';
   }
-
-  document.getElementById('pay-btn').disabled = false;
 }
 
 // Real Stripe test-mode Payment Links, one per exact service and price —
@@ -2689,7 +2689,13 @@ function openVenmoPayModal() {
   document.getElementById('venmo-owner-link').href = venmoPayLink(item.price, `TeenTastic Turf — ${item.serviceName}`);
   document.getElementById('customer-venmo-handle').value = '';
   document.getElementById('customer-venmo-error').style.display = 'none';
+  document.getElementById('venmo-step-pay').style.display = 'block';
+  document.getElementById('venmo-step-username').style.display = 'none';
   document.getElementById('customer-venmo-modal').classList.add('active');
+}
+function goToVenmoUsernameStep() {
+  document.getElementById('venmo-step-pay').style.display = 'none';
+  document.getElementById('venmo-step-username').style.display = 'block';
 }
 function closeVenmoPayModal() {
   document.getElementById('customer-venmo-modal').classList.remove('active');
