@@ -1685,15 +1685,26 @@ const BUSINESS_CONTACT_EMAIL = "arjun.obliprabu@gmail.com";
 // is simply ignored by EmailJS, so it's fine to always pass a full set.
 // kind: 'good' or 'cancelled', picks which of the 2 templates to use.
 function sendEmail(toEmail, toName, subject, fields, kind) {
-  if (typeof emailjs === 'undefined' || !toEmail) return;
+  if (typeof emailjs === 'undefined') {
+    console.warn('Email NOT sent — the EmailJS library never loaded on this page (check your internet connection, or an ad blocker/extension may be blocking cdn.jsdelivr.net).');
+    return;
+  }
+  if (!toEmail) {
+    console.warn('Email NOT sent — no recipient email address was provided.');
+    return;
+  }
   const templateId = kind === 'cancelled' ? EMAILJS_TEMPLATE_CANCELLED : EMAILJS_TEMPLATE_GOOD_NEWS;
+  console.log(`Sending email to ${toEmail} using template ${templateId}...`);
   emailjs.send(EMAILJS_SERVICE_ID, templateId, {
     to_email: toEmail,
     to_name: toName || toEmail,
     subject: subject,
     email: BUSINESS_CONTACT_EMAIL,
     ...fields
-  }).catch(err => console.warn('Email failed to send.', err));
+  }).then(
+    () => console.log(`Email sent successfully to ${toEmail}.`),
+    err => console.warn('Email FAILED to send — EmailJS returned an error:', err)
+  );
 }
 
 // Which local storage keys are mirrored to the cloud, and the
