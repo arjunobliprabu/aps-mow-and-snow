@@ -3140,6 +3140,20 @@ function undoJobComplete(bookingId) {
   writeStore(BOOKINGS_KEY, bookings);
   renderAdminDashboard();
   showToast('Job moved back to active bookings.');
+
+  // Undoing a job moves it back up into "All bookings", which sits
+  // ABOVE the Completed Services section a person is looking at when
+  // they click Undo — without this, the job just vanishes from view
+  // and it can look like nothing happened. Scroll up and flash it so
+  // it's obvious the undo actually worked.
+  const jumpToRow = () => {
+    const rowEl = document.getElementById(`admin-job-row-${bookingId}`);
+    if (!rowEl) return;
+    rowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    rowEl.classList.add('job-selected');
+    setTimeout(() => rowEl.classList.remove('job-selected'), 2000);
+  };
+  setTimeout(jumpToRow, 50);
 }
 function renderAdminJobRequests(bookings) {
   const list = document.getElementById('admin-job-requests-list');
