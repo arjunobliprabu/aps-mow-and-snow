@@ -2203,6 +2203,7 @@ function confirmNextCartItemAsBooking() {
   const item = cart[mineIndex];
   const newBooking = {
     ...item,
+    id: `booking-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     assignedProviderEmail: null,
     jobRequests: [],
     completed: false
@@ -2701,13 +2702,14 @@ function closeVenmoPayModal() {
   document.getElementById('customer-venmo-modal').classList.remove('active');
 }
 function submitVenmoPayment() {
-  const handle = document.getElementById('customer-venmo-handle').value.trim();
+  let handle = document.getElementById('customer-venmo-handle').value.trim();
   const errorEl = document.getElementById('customer-venmo-error');
   if (!handle) {
     errorEl.innerText = 'Please enter your Venmo username so we can confirm the payment.';
     errorEl.style.display = 'block';
     return;
   }
+  if (!handle.startsWith('@')) handle = '@' + handle;
   closeVenmoPayModal();
 
   // Same stacking logic as the Stripe flow: confirm just the item that was
@@ -2715,6 +2717,15 @@ function submitVenmoPayment() {
   // that was the last one, show the final confirmation.
   const paidItem = confirmNextCartItemAsBooking();
   if (!paidItem) return;
+
+  // Record the Venmo username the customer said they paid from, so admin
+  // can look it up on the admin dashboard to confirm the payment.
+  const bookings = getBookings();
+  const savedBooking = bookings.find(b => b.id === paidItem.id);
+  if (savedBooking) {
+    savedBooking.customerVenmo = handle;
+    writeStore(BOOKINGS_KEY, bookings);
+  }
 
   const email = getCurrentUser();
   const stillPending = getCart().filter(c => c.email === email);
@@ -2977,7 +2988,7 @@ function renderAdminDashboard() {
       <div class="appt-row clickable-job" id="admin-job-row-${b.id}" onclick="highlightAdminJob('${b.id}')">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${statusNote}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''}${statusNote}</p>
         </div>
         <div style="text-align:right;">
           <p style="font-weight:500;margin:0 0 6px 0;">${priceLabel}</p>
@@ -3043,7 +3054,7 @@ function renderAdminCompletedLists(bookings) {
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''}</p>
         </div>
         <button class="remove-btn" onclick="undoJobComplete('${b.id}')">Undo</button>
       </div>
@@ -3056,7 +3067,7 @@ function renderAdminCompletedLists(bookings) {
       <div class="appt-row">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email} — completed by ${b.completedBy}</p>
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''} — completed by ${b.completedBy}</p>
         </div>
         <button class="remove-btn" onclick="undoJobComplete('${b.id}')">Undo</button>
       </div>
@@ -3113,9 +3124,7 @@ function renderAdminJobRequests(bookings) {
       <div class="appt-row" style="flex-direction:column;align-items:stretch;">
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
-          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}</p>
-        </div>
-        ${requestRows}
+          <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${b.customerVenmo ? ` — Venmo: ${b.customerVenmo}` : ''}</p>
       </div>
     `;
   }).join('');
