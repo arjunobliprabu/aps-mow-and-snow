@@ -1675,14 +1675,24 @@ try {
 }
 // toEmail/toName: who receives it. subject/message: the actual content.
 // kind: 'good' or 'cancelled', picks which of the 2 templates to use.
-function sendEmail(toEmail, toName, subject, message, kind) {
+// Business contact email, used as the Reply-To on every outgoing email
+// so a customer/provider hitting "reply" reaches a real inbox.
+const BUSINESS_CONTACT_EMAIL = "arjun.obliprabu@gmail.com";
+// toEmail/toName: who receives it. subject: the email subject line.
+// fields: an object with whichever named placeholders the template
+// needs — service_name, date, time, price, customer_name,
+// payout_amount, message, etc. Any field not used by a given template
+// is simply ignored by EmailJS, so it's fine to always pass a full set.
+// kind: 'good' or 'cancelled', picks which of the 2 templates to use.
+function sendEmail(toEmail, toName, subject, fields, kind) {
   if (typeof emailjs === 'undefined' || !toEmail) return;
   const templateId = kind === 'cancelled' ? EMAILJS_TEMPLATE_CANCELLED : EMAILJS_TEMPLATE_GOOD_NEWS;
   emailjs.send(EMAILJS_SERVICE_ID, templateId, {
     to_email: toEmail,
     to_name: toName || toEmail,
     subject: subject,
-    message: message
+    email: BUSINESS_CONTACT_EMAIL,
+    ...fields
   }).catch(err => console.warn('Email failed to send.', err));
 }
 
@@ -2261,15 +2271,6 @@ function confirmNextCartItemAsBooking() {
   writeStore(BOOKINGS_KEY, [...getBookings(), newBooking]);
   cart.splice(mineIndex, 1);
   writeStore(CART_KEY, cart);
-
-  sendEmail(
-    newBooking.email,
-    customerDisplayName(newBooking.email),
-    `Your booking with TeenTastic Turf is confirmed!`,
-    `Your booking is confirmed! Here are the details:\n\nService: ${newBooking.serviceName}\n${bookingWhenLabel(newBooking)}\nPrice: $${newBooking.price}\n\nSomebody will show up at the time above for your service. If anything changes, we'll reach out.\n\nThanks for booking with us!`,
-    'good'
-  );
-
   return newBooking;
 }
 function formatDateISO(y, m, d) {
@@ -2282,6 +2283,29 @@ function prettyDate(iso) {
 }
 function bookingWhenLabel(b) {
   return b.isPass ? 'Weekly — full season' : `${prettyDate(b.dateISO)} · ${b.time}`;
+}
+// Separate date/time strings for email templates that have their own
+// {{date}} and {{time}} fields, rather than one combined string.
+function bookingDateTimeParts(b) {
+  return b.isPass
+    ? { date: 'Weekly — full season', time: '' }
+    : { date: prettyDate(b.dateISO), time: b.time };
+}
+// Sends the booking-confirmed email, once we actually know how they paid.
+function sendBookingConfirmedEmail(booking) {
+  sendEmail(
+    booking.email,
+    customerDisplayName(booking.email),
+    `Your booking with TeenTastic Turf is confirmed!`,
+    {
+      service_name: booking.serviceName,
+      ...bookingDateTimeParts(booking),
+      price: booking.price,
+      payment_method: booking.paymentMethod === 'cash' ? 'Cash' : 'Venmo',
+      message: `Your booking is confirmed! Here are the details:\n\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\nPrice: $${booking.price}\n\nSomebody will show up at the time above for your service. If anything changes, we'll reach out.\n\nThanks for booking with us!`
+    },
+    'good'
+  );
 }
 function paymentInfoLabel(b) {
   if (b.customerVenmo) return ` — Venmo: ${b.customerVenmo}`;
@@ -2789,6 +2813,7 @@ function submitVenmoPayment() {
   if (savedBooking) {
     savedBooking.customerVenmo = handle;
     writeStore(BOOKINGS_KEY, bookings);
+    sendBookingConfirmedEmail(savedBooking);
   }
 
   const email = getCurrentUser();
@@ -2817,6 +2842,7 @@ function payByCash() {
   if (savedBooking) {
     savedBooking.paymentMethod = 'cash';
     writeStore(BOOKINGS_KEY, bookings);
+    sendBookingConfirmedEmail(savedBooking);
   }
 
   const email = getCurrentUser();
@@ -3174,7 +3200,12 @@ function sendJobCompletedEmails(booking) {
     booking.email,
     customerDisplayName(booking.email),
     `Your ${booking.serviceName} is done!`,
-    `Just letting you know your service has been completed:\n\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nThanks for choosing TeenTastic Turf — we hope your yard looks great! If you have any questions or notice anything that needs attention, just reply to this email.`,
+    {
+      service_name: booking.serviceName,
+      ...bookingDateTimeParts(booking),
+      price: booking.price,
+      message: `Just letting you know your service has been completed:\n\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nThanks for choosing TeenTastic Turf — we hope your yard looks great! If you have any questions or notice anything that needs attention, just reply to this email.`
+    },
     'good'
   );
   if (booking.assignedProviderEmail) {
@@ -3184,7 +3215,14 @@ function sendJobCompletedEmails(booking) {
       booking.assignedProviderEmail,
       provider ? provider.firstName : booking.assignedProviderEmail,
       `Job completed — payout coming your way`,
-      `Nice work! This job has been marked completed:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\nYour payout: $${providerCut.toFixed(2)}\n\nAdmin will send your payout via Venmo within 10 days.`,
+      {
+        customer_name: customerDisplayName(booking.email),
+        service_name: booking.serviceName,
+        ...bookingDateTimeParts(booking),
+        price: booking.price,
+        payout_amount: providerCut.toFixed(2),
+        message: `Nice work! This job has been marked completed:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\nYour payout: $${providerCut.toFixed(2)}\n\nAdmin will send your payout via Venmo within 10 days.`
+      },
       'good'
     );
   }
@@ -3771,7 +3809,12 @@ function confirmCancelBooking() {
     booking.email,
     customerDisplayName(booking.email),
     `Your booking has been cancelled`,
-    `Your booking has been cancelled:\n\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nIf you paid for this service, your payment will be refunded. If you have any questions, just reply to this email.`,
+    {
+      service_name: booking.serviceName,
+      ...bookingDateTimeParts(booking),
+      price: booking.price,
+      message: `Your booking has been cancelled:\n\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nIf you paid for this service, your payment will be refunded. If you have any questions, just reply to this email.`
+    },
     'cancelled'
   );
   if (booking.assignedProviderEmail) {
@@ -3780,7 +3823,13 @@ function confirmCancelBooking() {
       booking.assignedProviderEmail,
       provider ? provider.firstName : booking.assignedProviderEmail,
       `A job on your schedule was cancelled`,
-      `Just a heads-up — this job has been cancelled and is no longer on your schedule:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nNo action needed on your end. Check Open Jobs for other available work.`,
+      {
+        customer_name: customerDisplayName(booking.email),
+        service_name: booking.serviceName,
+        ...bookingDateTimeParts(booking),
+        price: booking.price,
+        message: `Just a heads-up — this job has been cancelled and is no longer on your schedule:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nNo action needed on your end. Check Open Jobs for other available work.`
+      },
       'cancelled'
     );
   }
