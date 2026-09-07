@@ -415,6 +415,23 @@
     color: var(--muted-foreground);
     font-style: italic;
   }
+  .size-guide {
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 0.78rem;
+  }
+  .size-guide-row {
+    display: grid;
+    grid-template-columns: 1.1fr 1.4fr 1.1fr;
+    gap: 6px;
+    padding: 7px 10px;
+  }
+  .size-guide-row:nth-child(even) { background: var(--secondary); }
+  .size-guide-row.head { font-weight: 600; background: var(--secondary); }
+  .size-guide-row span:nth-child(2),
+  .size-guide-row span:nth-child(3) { color: var(--muted-foreground); }
   .before-after-section { margin-top: 60px; }
   .before-after-grid {
     display: flex;
@@ -1281,6 +1298,7 @@
 
     <div id="modal-size-section" style="display:none;">
       <p style="font-size:0.9rem; margin-top:20px; margin-bottom:0;">Yard size</p>
+      <div id="modal-size-guide" style="display:none;"></div>
       <div class="time-grid" id="modal-size-grid"></div>
       <p class="size-disclaimer">If the selected size does not match your actual yard size, you will be required to pay the difference in cash.</p>
     </div>
@@ -1489,7 +1507,12 @@
    ============================================================ */
 const SPRING_FALL_OFFERINGS = [
   { name: "Seasonal Lawn Care Pass", price: 400, priceLabel: "$400 / full season", description: "Skip picking dates one by one — you'll be provided with service every week, all season long.", isPass: true },
-  { name: "Lawn mowing — back yard", sizePricing: { "Small": 30, "Medium": 40, "Large": 50, "Extra Large": 60 }, description: "Precision cut and edged borders for the back yard." },
+  { name: "Lawn mowing — back yard", sizePricing: { "Small": 30, "Medium": 40, "Large": 50, "Extra Large": 60 }, description: "Precision cut and edged borders for the back yard.", sizeGuide: [
+    { size: "Small", emoji: "🌱", area: "2,000–4,000 sq ft", acres: "0.05–0.09 acres" },
+    { size: "Medium", emoji: "🌿", area: "4,000–8,000 sq ft", acres: "0.09–0.18 acres" },
+    { size: "Large", emoji: "🌳", area: "8,000–15,000 sq ft", acres: "0.18–0.34 acres" },
+    { size: "Extra Large", emoji: "🏡", area: "15,000–25,000+ sq ft", acres: "0.34–0.57+ acres" }
+  ] },
   { name: "Lawn mowing — front yard", sizePricing: { "Small": 20, "Medium": 30, "Large": 40, "Extra Large": 50 }, description: "Curb-appeal cut and clean edging up front." },
   { name: "Leaf blowing", sizePricing: { "Small": 20, "Medium": 25, "Large": 30, "Extra Large": 35 }, description: "Full yard clearing, beds and walkways included." },
   { name: "Weed whacking", sizePricing: { "Small": 30, "Medium": 40, "Large": 50, "Extra Large": 60 }, description: "Trim along fences, beds and hardscape edges." },
@@ -2426,9 +2449,26 @@ function selectModalTime(slot, btn) {
   if (activeOffering.sizePricing) {
     const sizeSection = document.getElementById('modal-size-section');
     const sizeGrid = document.getElementById('modal-size-grid');
+    const sizeGuideEl = document.getElementById('modal-size-guide');
     sizeSection.style.display = 'block';
     sizeGrid.innerHTML = '';
     document.getElementById('modal-confirm-btn').disabled = true;
+
+    if (activeOffering.sizeGuide) {
+      sizeGuideEl.style.display = 'block';
+      sizeGuideEl.innerHTML = `
+        <div class="size-guide">
+          <div class="size-guide-row head"><span>Size</span><span>Approx. lawn area</span><span>Approx. acres</span></div>
+          ${activeOffering.sizeGuide.map(g => `
+            <div class="size-guide-row"><span>${g.emoji} ${g.size}</span><span>${g.area}</span><span>${g.acres}</span></div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      sizeGuideEl.style.display = 'none';
+      sizeGuideEl.innerHTML = '';
+    }
+
     Object.entries(activeOffering.sizePricing).forEach(([sizeName, sizePrice]) => {
       const sbtn = document.createElement('button');
       sbtn.type = 'button';
