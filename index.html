@@ -2137,6 +2137,17 @@ function submitProviderSignUp() {
 
   closeSignInModal();
   showToast(`Thanks, ${firstName}! Your account is waiting on admin approval before you can sign in.`);
+
+  sendEmail(
+    BUSINESS_CONTACT_EMAIL,
+    'Admin',
+    `New service provider signup: ${firstName} ${lastName}`,
+    {
+      customer_name: `${firstName} ${lastName}`,
+      message: `A new service provider has signed up and is waiting on your approval:\n\nName: ${firstName} ${lastName}\nEmail: ${email}\nVenmo: ${venmo}\n\nGo to your admin dashboard's Service Providers section to approve or decline.`
+    },
+    'good'
+  );
 }
 
 function finishSignIn(email) {
@@ -3326,6 +3337,21 @@ function acceptJobRequest(bookingId, providerEmail) {
      Their share is <strong>$${providerCut.toFixed(2)}</strong> (85% of $${booking.price}).<br><br>
      Send it yourself via Venmo to: <strong>${emp && emp.venmo ? emp.venmo : 'no Venmo on file'}</strong>`;
   document.getElementById('venmo-reminder-modal').classList.add('active');
+
+  sendEmail(
+    providerEmail,
+    emp ? emp.firstName : providerEmail,
+    `You're approved for a job: ${booking.serviceName}`,
+    {
+      customer_name: customerDisplayName(booking.email),
+      service_name: booking.serviceName,
+      ...bookingDateTimeParts(booking),
+      price: booking.price,
+      payout_amount: providerCut.toFixed(2),
+      message: `Good news — you're approved for this job:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\nYour payout: $${providerCut.toFixed(2)}\n\nCheck your provider dashboard for the full details.`
+    },
+    'good'
+  );
 }
 function closeVenmoReminderModal() {
   document.getElementById('venmo-reminder-modal').classList.remove('active');
@@ -3349,6 +3375,16 @@ function approveServiceProvider(email) {
   saveEmployees(employees);
   renderAdminEmployeesList();
   showToast(`Approved ${emp.firstName} ${emp.lastName} — they can now sign in.`);
+
+  sendEmail(
+    emp.email,
+    emp.firstName,
+    `You're approved to work with TeenTastic Turf!`,
+    {
+      message: `Good news, ${emp.firstName} — your service provider account has been approved! You can now sign in and start requesting jobs from the Open Jobs list.`
+    },
+    'good'
+  );
 }
 
 function renderAdminEmployeesList() {
@@ -3694,6 +3730,21 @@ function requestJob(bookingId) {
     booking.jobRequests.push(email);
     writeStore(BOOKINGS_KEY, bookings);
     showToast('Request sent — waiting on admin approval.');
+
+    const emp = findEmployee(email);
+    sendEmail(
+      BUSINESS_CONTACT_EMAIL,
+      'Admin',
+      `Job request: ${booking.serviceName}`,
+      {
+        customer_name: customerDisplayName(booking.email),
+        service_name: booking.serviceName,
+        ...bookingDateTimeParts(booking),
+        price: booking.price,
+        message: `${emp ? emp.firstName + ' ' + emp.lastName : email} has requested to take a job:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nGo to your admin dashboard's Job Requests section to approve or decline.`
+      },
+      'good'
+    );
   }
   renderEmployeeDashboard();
 }
@@ -3773,12 +3824,30 @@ function confirmDeleteCustomer() {
   const type = pendingDeleteType;
 
   if (type === 'employee') {
-    const employees = getEmployees().filter(e => e.email.toLowerCase() !== email.toLowerCase());
-    saveEmployees(employees);
+    const employees = getEmployees();
+    const emp = employees.find(e => e.email.toLowerCase() === email.toLowerCase());
+    const wasAwaitingApproval = emp && emp.status === 'awaiting_approval';
+    const remaining = employees.filter(e => e.email.toLowerCase() !== email.toLowerCase());
+    saveEmployees(remaining);
     closeDeleteCustomerModal();
     pendingDeleteType = 'customer';
     renderAdminEmployeesList();
     showToast(`Removed service provider: ${email}`);
+
+    // Only send a "declined" email for a pending signup that was turned
+    // down — removing an already-active provider is a different action
+    // and shouldn't sound like a rejection of their original application.
+    if (wasAwaitingApproval) {
+      sendEmail(
+        emp.email,
+        emp.firstName,
+        `Update on your TeenTastic Turf application`,
+        {
+          message: `Hi ${emp.firstName}, thanks for your interest in working with TeenTastic Turf. Unfortunately, your service provider application wasn't approved at this time.`
+        },
+        'cancelled'
+      );
+    }
     return;
   }
 
