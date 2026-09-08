@@ -3249,6 +3249,39 @@ function sendJobCompletedEmails(booking) {
     );
   }
 }
+// Sends a correction notice to whoever got a "job completed" email, since
+// that completion has now been reversed — used whether admin or the
+// provider themselves undoes it.
+function sendJobUndoneEmails(booking) {
+  sendEmail(
+    booking.email,
+    customerDisplayName(booking.email),
+    `Update on your ${booking.serviceName}`,
+    {
+      service_name: booking.serviceName,
+      ...bookingDateTimeParts(booking),
+      price: booking.price,
+      message: `We previously let you know your service was completed, but that was marked in error — your ${booking.serviceName} is back in progress. We'll follow up once it's actually finished. Sorry for the mix-up!`
+    },
+    'cancelled'
+  );
+  if (booking.assignedProviderEmail) {
+    const provider = findEmployee(booking.assignedProviderEmail);
+    sendEmail(
+      booking.assignedProviderEmail,
+      provider ? provider.firstName : booking.assignedProviderEmail,
+      `Job completion undone: ${booking.serviceName}`,
+      {
+        customer_name: customerDisplayName(booking.email),
+        service_name: booking.serviceName,
+        ...bookingDateTimeParts(booking),
+        price: booking.price,
+        message: `Heads up — this job was marked completed, but that's been undone:\n\nCustomer: ${customerDisplayName(booking.email)}\nService: ${booking.serviceName}\n${bookingWhenLabel(booking)}\n\nIt's back in your active jobs, and no payout will be sent until it's marked completed again.`
+      },
+      'cancelled'
+    );
+  }
+}
 function adminMarkJobComplete(bookingId) {
   const bookings = getBookings();
   const booking = bookings.find(b => b.id === bookingId);
@@ -3271,6 +3304,7 @@ function undoJobComplete(bookingId) {
   writeStore(BOOKINGS_KEY, bookings);
   renderAdminDashboard();
   showToast('Job moved back to active bookings.');
+  sendJobUndoneEmails(booking);
 
   // Undoing a job moves it back up into "All bookings", which sits
   // ABOVE the Completed Services section a person is looking at when
@@ -3690,8 +3724,8 @@ function renderEmployeeDashboard() {
     }).join('');
   }
 
-  // Jobs this provider has personally completed — read-only record, no
-  // undo here (that's an admin-only safeguard, in the admin dashboard).
+  // Jobs this provider has personally completed. They can undo their
+  // own completions too — e.g. if they marked something done by mistake.
   const myCompletedJobs = bookings.filter(b => b.assignedProviderEmail === email && b.completed);
   const myCompletedList = document.getElementById('employee-completed-jobs-list');
   if (myCompletedJobs.length === 0) {
@@ -3705,6 +3739,7 @@ function renderEmployeeDashboard() {
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
           <p class="meta">${bookingWhenLabel(b)} — you earned $${providerCut.toFixed(2)}</p>
         </div>
+        <button class="remove-btn" onclick="providerUndoJobComplete('${b.id}')">Undo</button>
       </div>
     `;
     }).join('');
@@ -3765,6 +3800,20 @@ function markJobComplete(bookingId) {
 }
 function closeJobCompleteModal() {
   document.getElementById('job-complete-modal').classList.remove('active');
+}
+// A provider undoing their OWN completed job — same effect as the
+// admin's Undo, scoped so a provider can only touch their own jobs.
+function providerUndoJobComplete(bookingId) {
+  const email = getCurrentUser();
+  const bookings = getBookings();
+  const booking = bookings.find(b => b.id === bookingId && b.assignedProviderEmail === email);
+  if (!booking) return;
+  booking.completed = false;
+  booking.completedBy = undefined;
+  writeStore(BOOKINGS_KEY, bookings);
+  renderEmployeeDashboard();
+  showToast('Job moved back to your active jobs.');
+  sendJobUndoneEmails(booking);
 }
 // Combines a booking's dateISO + time slot (e.g. "5 PM") into a real
 // Date object, so it can be compared against right now.
