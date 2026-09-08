@@ -3303,6 +3303,8 @@ function renderAdminJobRequests(bookings) {
         <div>
           <p style="margin:0;font-weight:500;">${b.serviceName}</p>
           <p class="meta">${bookingWhenLabel(b)} — booked by ${b.email}${paymentInfoLabel(b)}</p>
+        </div>
+        ${requestRows}
       </div>
     `;
   }).join('');
