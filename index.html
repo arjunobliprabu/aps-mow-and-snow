@@ -2167,6 +2167,16 @@ function submitSignUp() {
   saveAccounts(accounts);
   pendingFinishSignInEmail = email;
   document.getElementById('customer-signup-created-modal').classList.add('active');
+
+  sendEmail(
+    email,
+    name,
+    `Welcome to TeenTastic Turf!`,
+    {
+      message: `Hi ${name}, your account has been created successfully! You're all set to start booking lawn care and snow removal services.`
+    },
+    'good'
+  );
 }
 function closeCustomerSignupCreatedModal() {
   document.getElementById('customer-signup-created-modal').classList.remove('active');
