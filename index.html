@@ -1227,6 +1227,12 @@
       <p class="signin-note" style="margin-top:8px;">After you add someone, email their invite link directly, or copy it and send it yourself.</p>
       <div id="admin-employees-list" style="margin-top:16px;"></div>
     </section>
+
+    <section style="margin-top:60px;padding-top:24px;border-top:2px solid #e8a0a0;">
+      <h2 class="font-display" style="font-size:1.6rem;color:#8a2f24;">Danger Zone</h2>
+      <p class="signin-note" style="margin-top:8px;">Permanently deletes every customer account, service provider account, and booking (on this device and in the cloud, for every device). Your admin login is not affected. This cannot be undone.</p>
+      <button class="pill-btn" style="background:#b3261e;margin-top:12px;" onclick="openResetAllDataModal()">Reset All Customer &amp; Provider Data</button>
+    </section>
   </div>
 </div>
 
@@ -1402,6 +1408,19 @@
     <div style="display:flex; gap:12px; margin-top:20px;">
       <button class="pill-btn full-btn" style="background:var(--secondary); color:var(--foreground);" onclick="closeDeleteCustomerModal()">Cancel</button>
       <button class="pill-btn full-btn" style="background:#b3261e;" onclick="confirmDeleteCustomer()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= RESET ALL DATA CONFIRM MODAL ================= -->
+<div class="modal-overlay" id="reset-all-data-modal" onclick="if(event.target===this) closeResetAllDataModal();">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <button class="modal-close-btn" onclick="closeResetAllDataModal()" title="Close">✕</button>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;">Reset all customer &amp; provider data?</h2>
+    <p class="modal-sub">This permanently deletes every customer account, service provider account, and booking — on this device and every other device (customers and providers signed in elsewhere will lose their accounts too). Your admin login is not affected. This cannot be undone.</p>
+    <div style="display:flex; gap:12px; margin-top:20px;">
+      <button class="pill-btn full-btn" style="background:var(--secondary); color:var(--foreground);" onclick="closeResetAllDataModal()">Cancel</button>
+      <button class="pill-btn full-btn" style="background:#b3261e;" onclick="confirmResetAllData()">Delete Everything</button>
     </div>
   </div>
 </div>
@@ -3965,6 +3984,26 @@ function confirmDeleteCustomer() {
   closeDeleteCustomerModal();
   renderAdminDashboard();
   showToast(`Removed account: ${email}`);
+}
+
+function openResetAllDataModal() {
+  document.getElementById('reset-all-data-modal').classList.add('active');
+}
+function closeResetAllDataModal() {
+  document.getElementById('reset-all-data-modal').classList.remove('active');
+}
+// Wipes every customer account, provider account, and booking — both on
+// this device and, since writeStore pushes to Firestore, in the cloud
+// for every other device too. The admin login isn't stored in any of
+// these three keys (it's a hardcoded constant), so it's untouched.
+function confirmResetAllData() {
+  writeStore(ACCOUNTS_KEY, []);
+  writeStore(EMPLOYEES_KEY, []);
+  writeStore(BOOKINGS_KEY, []);
+  writeStore(CART_KEY, []);
+  closeResetAllDataModal();
+  renderAdminDashboard();
+  showToast('All customer and service provider data has been deleted.');
 }
 
 let pendingCancelBookingId = null;
