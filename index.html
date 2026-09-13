@@ -3969,9 +3969,9 @@ function confirmDeleteCustomer() {
       sendEmail(
         emp.email,
         emp.firstName,
-        `Update on your TeenTastic Turf application`,
+        `This Service Provider Request has been Cancelled`,
         {
-          message: `Hi ${emp.firstName}, thanks for your interest in working with TeenTastic Turf. Unfortunately, your service provider application wasn't approved at this time.`
+          message: `Hi ${emp.firstName}, this is a notice that your Service Provider Request has been cancelled.`
         },
         'cancelled'
       );
