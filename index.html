@@ -1522,6 +1522,16 @@
   </div>
 </div>
 
+<!-- ================= PROVIDER SIGNUP RECEIVED MODAL ================= -->
+<div class="modal-overlay" id="provider-signup-received-modal" onclick="if(event.target===this) closeProviderSignupReceivedModal();">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <div class="check-circle">✓</div>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;margin-top:16px;">Your request has been received!</h2>
+    <p class="modal-sub">Admin will review your application and approve or decline it. You'll get an email letting you know either way — no need to check back manually.</p>
+    <button class="pill-btn full-btn" type="button" onclick="closeProviderSignupReceivedModal()" style="margin-top:8px;">Got it</button>
+  </div>
+</div>
+
 <!-- ================= EMPLOYEE SET PASSWORD (INVITE ACCEPT) MODAL ================= -->
 <div class="modal-overlay" id="employee-setup-modal">
   <div class="modal-box" style="max-width:380px;">
@@ -2174,7 +2184,7 @@ function submitProviderSignUp() {
   saveEmployees(employees);
 
   closeSignInModal();
-  showToast(`Thanks, ${firstName}! Your account is waiting on admin approval before you can sign in.`);
+  document.getElementById('provider-signup-received-modal').classList.add('active');
 
   sendEmail(
     BUSINESS_CONTACT_EMAIL,
@@ -3855,6 +3865,9 @@ function markJobComplete(bookingId) {
 }
 function closeJobCompleteModal() {
   document.getElementById('job-complete-modal').classList.remove('active');
+}
+function closeProviderSignupReceivedModal() {
+  document.getElementById('provider-signup-received-modal').classList.remove('active');
 }
 // A provider undoing their OWN completed job — same effect as the
 // admin's Undo, scoped so a provider can only touch their own jobs.
