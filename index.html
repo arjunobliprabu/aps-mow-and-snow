@@ -940,7 +940,7 @@
 <!-- ================= TERMS AND CONDITIONS (Service Providers) ================= -->
 <div id="terms-view" class="view">
   <div class="wrap">
-    <button class="back-link" onclick="navigateTo('home-view')">← Back</button>
+    <button class="back-link" onclick="closeTermsAndReturn()">← Back</button>
     <p class="eyebrow">Service Provider Agreement</p>
     <h1 class="big-title font-display" style="font-size:2.4rem;">Terms and Conditions</h1>
     <p class="subtitle">Please read before signing up as a service provider.</p>
@@ -962,6 +962,8 @@
         <strong style="color:var(--foreground);">5. Leaving any time.</strong> You can stop working with TeenTastic Turf whenever you want, and TeenTastic Turf can remove your access whenever it needs to.
       </p>
     </div>
+
+    <button id="terms-ok-return-btn" class="pill-btn" style="display:none;margin-top:24px;" onclick="closeTermsAndReturn()">OK, Back to Sign Up →</button>
   </div>
 </div>
 
@@ -1357,7 +1359,7 @@
 
       <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.85rem;margin:16px 0 4px 0;cursor:pointer;">
         <input type="checkbox" id="provider-agreement-checkbox" style="width:16px;height:16px;flex-shrink:0;margin-top:2px;">
-        <span>I agree to the <a href="?terms=1" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
+        <span>I agree to the <a href="#" onclick="event.preventDefault(); openTermsFromSignup('self-signup');" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
       </label>
     </div>
 
@@ -1547,7 +1549,7 @@
 
     <label style="display:flex;align-items:flex-start;gap:10px;font-size:0.85rem;margin:16px 0 4px 0;cursor:pointer;">
       <input type="checkbox" id="employee-setup-agreement-checkbox" style="width:16px;height:16px;flex-shrink:0;margin-top:2px;">
-      <span>I agree to the <a href="?terms=1" target="_blank" rel="noopener" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
+      <span>I agree to the <a href="#" onclick="event.preventDefault(); openTermsFromSignup('invite-accept');" style="color:var(--primary);text-decoration:underline;">Terms and Conditions</a>.</span>
     </label>
 
     <p id="employee-setup-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 12px 0;"></p>
@@ -3946,6 +3948,63 @@ function checkForTermsInUrl() {
   navigateTo('terms-view');
 }
 
+// Lets a provider read the Terms mid-signup without losing their spot —
+// no more opening a second tab. Their in-progress fields are saved here,
+// then restored when they come back via the Back or OK button.
+let termsReturnContext = null; // 'self-signup' | 'invite-accept' | null
+let termsReturnFields = null;
+function openTermsFromSignup(context) {
+  termsReturnContext = context;
+  if (context === 'self-signup') {
+    termsReturnFields = {
+      email: document.getElementById('signin-email').value,
+      password: document.getElementById('signin-password').value,
+      firstName: document.getElementById('provider-first-name').value,
+      lastName: document.getElementById('provider-last-name').value,
+      venmo: document.getElementById('provider-venmo').value,
+      agreed: document.getElementById('provider-agreement-checkbox').checked
+    };
+    closeSignInModal();
+  } else if (context === 'invite-accept') {
+    termsReturnFields = {
+      password: document.getElementById('employee-setup-password').value,
+      venmo: document.getElementById('employee-setup-venmo').value,
+      agreed: document.getElementById('employee-setup-agreement-checkbox').checked
+    };
+    document.getElementById('employee-setup-modal').classList.remove('active');
+  }
+  navigateTo('terms-view');
+}
+function closeTermsAndReturn() {
+  if (termsReturnContext === 'self-signup') {
+    openSignInModal(null, 'provider');
+    toggleAuthMode(); // openSignInModal defaults to sign-in mode; switch to sign-up
+    const f = termsReturnFields;
+    if (f) {
+      document.getElementById('signin-email').value = f.email;
+      document.getElementById('signin-password').value = f.password;
+      document.getElementById('provider-first-name').value = f.firstName;
+      document.getElementById('provider-last-name').value = f.lastName;
+      document.getElementById('provider-venmo').value = f.venmo;
+      document.getElementById('provider-agreement-checkbox').checked = f.agreed;
+    }
+    navigateTo('home-view');
+  } else if (termsReturnContext === 'invite-accept') {
+    document.getElementById('employee-setup-modal').classList.add('active');
+    const f = termsReturnFields;
+    if (f) {
+      document.getElementById('employee-setup-password').value = f.password;
+      document.getElementById('employee-setup-venmo').value = f.venmo;
+      document.getElementById('employee-setup-agreement-checkbox').checked = f.agreed;
+    }
+    navigateTo('home-view');
+  } else {
+    navigateTo('home-view');
+  }
+  termsReturnContext = null;
+  termsReturnFields = null;
+}
+
 let pendingDeleteEmail = null;
 let pendingDeleteType = 'customer';
 
@@ -4123,6 +4182,7 @@ navigateTo = function(viewId) {
   if (viewId === 'confirmation-view') renderConfirmation();
   if (viewId === 'admin-view') renderAdminMap();
   if (viewId === 'completed-services-view') { ensureBookingIds(); renderAdminCompletedLists(getBookings()); }
+  if (viewId === 'terms-view') { document.getElementById('terms-ok-return-btn').style.display = termsReturnContext ? 'inline-block' : 'none'; }
   if (viewId === 'employee-view') {
     const email = getCurrentUser();
     const bookings = getBookings();
