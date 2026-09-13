@@ -1532,6 +1532,16 @@
   </div>
 </div>
 
+<!-- ================= CUSTOMER ACCOUNT CREATED MODAL ================= -->
+<div class="modal-overlay" id="customer-signup-created-modal" onclick="if(event.target===this) closeCustomerSignupCreatedModal();">
+  <div class="modal-box" style="max-width:380px;text-align:center;">
+    <div class="check-circle">✓</div>
+    <h2 class="modal-title font-display" style="font-size:1.4rem;margin-top:16px;">Account created!</h2>
+    <p class="modal-sub">Welcome — your account is all set up and you're signed in.</p>
+    <button class="pill-btn full-btn" type="button" onclick="closeCustomerSignupCreatedModal()" style="margin-top:8px;">Got it</button>
+  </div>
+</div>
+
 <!-- ================= EMPLOYEE SET PASSWORD (INVITE ACCEPT) MODAL ================= -->
 <div class="modal-overlay" id="employee-setup-modal">
   <div class="modal-box" style="max-width:380px;">
@@ -1799,13 +1809,13 @@ function cloudSyncPush(key, value) {
   firestoreDb.collection('shared').doc(docName).set({ data: value, updatedAt })
     .catch(err => {
       console.warn('Cloud sync push failed — change saved on this device only.', err);
-      // This is the important part: without this, a failed cloud save is
-      // invisible — the change looks like it worked (it's saved locally
-      // and the screen updates right away) but silently never reaches
-      // other devices, and can even get reverted here on a future page
-      // load once a stale cloud snapshot comes back down. Telling the
-      // person immediately is the only way they'd know to fix it.
-      showToast('This change saved on this device, but the cloud sync failed — it may not show up on other devices. Check your Firestore rules haven\'t expired.');
+      // This diagnostic toast is only shown to admin. Customers and
+      // providers should never see a technical "cloud sync failed"
+      // message — it reads like something is broken with their
+      // account, when really it's an admin-side Firestore issue to fix.
+      if (isAdminEmail(getCurrentUser())) {
+        showToast('This change saved on this device, but the cloud sync failed — it may not show up on other devices. Check your Firestore rules haven\'t expired.');
+      }
     });
 }
 
@@ -1969,6 +1979,7 @@ function logoutUser() {
 }
 
 let pendingSignInAction = null;
+let pendingFinishSignInEmail = null;
 let authMode = 'signin'; // 'signin' | 'signup'
 let authRole = 'customer'; // 'customer' | 'provider'
 
@@ -2154,7 +2165,16 @@ function submitSignUp() {
   const accounts = getAccounts();
   accounts.push({ email, password, name, address: { street, city, state, zip } });
   saveAccounts(accounts);
-  finishSignIn(email);
+  pendingFinishSignInEmail = email;
+  document.getElementById('customer-signup-created-modal').classList.add('active');
+}
+function closeCustomerSignupCreatedModal() {
+  document.getElementById('customer-signup-created-modal').classList.remove('active');
+  if (pendingFinishSignInEmail) {
+    const email = pendingFinishSignInEmail;
+    pendingFinishSignInEmail = null;
+    finishSignIn(email);
+  }
 }
 
 function submitProviderSignUp() {
