@@ -1418,6 +1418,9 @@
     <button class="modal-close-btn" onclick="closeResetAllDataModal()" title="Close">✕</button>
     <h2 class="modal-title font-display" style="font-size:1.4rem;">Reset all customer &amp; provider data?</h2>
     <p class="modal-sub">This permanently deletes every customer account, service provider account, and booking — on this device and every other device (customers and providers signed in elsewhere will lose their accounts too). Your admin login is not affected. This cannot be undone.</p>
+    <label class="form-label" for="reset-all-data-password" style="text-align:left;">Enter your admin password to confirm</label>
+    <input class="form-input" id="reset-all-data-password" type="password" placeholder="Admin password">
+    <p id="reset-all-data-error" style="display:none;color:#b3261e;font-size:0.8rem;margin:-8px 0 0 0;text-align:left;">Incorrect password.</p>
     <div style="display:flex; gap:12px; margin-top:20px;">
       <button class="pill-btn full-btn" style="background:var(--secondary); color:var(--foreground);" onclick="closeResetAllDataModal()">Cancel</button>
       <button class="pill-btn full-btn" style="background:#b3261e;" onclick="confirmResetAllData()">Delete Everything</button>
@@ -3996,6 +3999,8 @@ function confirmDeleteCustomer() {
 }
 
 function openResetAllDataModal() {
+  document.getElementById('reset-all-data-password').value = '';
+  document.getElementById('reset-all-data-error').style.display = 'none';
   document.getElementById('reset-all-data-modal').classList.add('active');
 }
 function closeResetAllDataModal() {
@@ -4005,7 +4010,14 @@ function closeResetAllDataModal() {
 // this device and, since writeStore pushes to Firestore, in the cloud
 // for every other device too. The admin login isn't stored in any of
 // these three keys (it's a hardcoded constant), so it's untouched.
+// Requires re-entering the admin password first, so this can't happen
+// from an accidental click.
 function confirmResetAllData() {
+  const password = document.getElementById('reset-all-data-password').value;
+  if (password !== ADMIN_PASSWORD) {
+    document.getElementById('reset-all-data-error').style.display = 'block';
+    return;
+  }
   writeStore(ACCOUNTS_KEY, []);
   writeStore(EMPLOYEES_KEY, []);
   writeStore(BOOKINGS_KEY, []);
