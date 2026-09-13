@@ -946,8 +946,8 @@
     <p class="subtitle">Please read before signing up as a service provider.</p>
 
     <div class="contact-card" style="text-align:left;max-width:600px;">
-      <p style="font-size:0.92rem;color:var(--muted-foreground);line-height:1.7;">
-        <strong style="color:var(--foreground);">1. Payment split.</strong> For every job you complete, 15% goes to TeenTastic Turf (admin) and you keep 85%. Payouts are sent manually via Venmo, typically within 10 days of completing a job.
+      <p style="font-size:0.95rem;line-height:1.7;background:var(--warm-bg);border:1.5px solid var(--primary);border-radius:12px;padding:14px 16px;">
+        <strong style="color:var(--foreground);">1. Payment split.</strong> For every job you complete, <strong style="color:var(--primary);">20%</strong> goes to TeenTastic Turf (admin) and you keep <strong style="color:var(--primary);">80%</strong>. Payouts are sent manually via Venmo, typically within 10 days of completing a job.
       </p>
       <p style="font-size:0.92rem;color:var(--muted-foreground);line-height:1.7;">
         <strong style="color:var(--foreground);">2. Doing the work.</strong> You're responsible for showing up on time, completing each job to a professional standard, and letting us know right away if a booking has a problem.
@@ -1878,9 +1878,9 @@ async function ensureBookingLocationsGeocoded(bookings) {
   if (toGeocode.length > 0) saveAccounts(accounts);
 }
 
-// Revenue split once a job is assigned to a service provider: they get 85%,
-// the admin keeps 15%. Rounded to the cent.
-const PROVIDER_SHARE = 0.85;
+// Revenue split once a job is assigned to a service provider: they get 80%,
+// the admin keeps 20%. Rounded to the cent.
+const PROVIDER_SHARE = 0.80;
 function splitJobPrice(price) {
   const providerCut = Math.round(price * PROVIDER_SHARE * 100) / 100;
   const adminCut = Math.round((price - providerCut) * 100) / 100;
@@ -3143,7 +3143,7 @@ function renderAdminDashboard() {
   document.getElementById('admin-stat-bookings').innerText = bookings.length;
   // Total revenue = what the admin actually keeps. A job done in-house (no
   // service provider assigned) counts in full; a job handed off to a
-  // provider only counts the admin's 15% cut, since the provider keeps 85%.
+  // provider only counts the admin's 20% cut, since the provider keeps 80%.
   const revenue = bookings.reduce((sum, b) => {
     return sum + (b.assignedProviderEmail ? splitJobPrice(b.price).adminCut : b.price);
   }, 0);
@@ -3159,7 +3159,7 @@ function renderAdminDashboard() {
       let priceLabel = `$${b.price}`;
       if (b.assignedProviderEmail) {
         const { adminCut } = splitJobPrice(b.price);
-        priceLabel = `$${adminCut.toFixed(2)} <span style="font-weight:400;color:var(--muted-foreground);font-size:0.75rem;">(your 15% of $${b.price})</span>`;
+        priceLabel = `$${adminCut.toFixed(2)} <span style="font-weight:400;color:var(--muted-foreground);font-size:0.75rem;">(your 20% of $${b.price})</span>`;
         statusNote = ` — assigned to ${b.assignedProviderEmail}`;
       }
       return `
@@ -3405,7 +3405,7 @@ function acceptJobRequest(bookingId, providerEmail) {
   const { providerCut } = splitJobPrice(booking.price);
   document.getElementById('venmo-reminder-text').innerHTML =
     `<strong>${emp ? emp.firstName + ' ' + emp.lastName : providerEmail}</strong> is assigned to <strong>${booking.serviceName}</strong> (${bookingWhenLabel(booking)}).<br><br>
-     Their share is <strong>$${providerCut.toFixed(2)}</strong> (85% of $${booking.price}).<br><br>
+     Their share is <strong>$${providerCut.toFixed(2)}</strong> (80% of $${booking.price}).<br><br>
      Send it yourself via Venmo to: <strong>${emp && emp.venmo ? emp.venmo : 'no Venmo on file'}</strong>`;
   document.getElementById('venmo-reminder-modal').classList.add('active');
 
