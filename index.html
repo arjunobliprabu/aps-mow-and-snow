@@ -797,7 +797,7 @@
 <body>
 
 <div class="account-widget" id="account-widget"></div>
-<button onclick="navigateTo('user-guide-view')" style="position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:60;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-size:0.85rem;font-weight:500;cursor:pointer;color:var(--foreground);box-shadow:0 1px 4px rgba(0,0,0,0.06);">📖 User Guide</button>
+<button id="user-guide-btn" onclick="navigateTo('user-guide-view')" style="position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:60;background:var(--card);border:1px solid var(--border);border-radius:999px;padding:8px 16px;font-size:0.85rem;font-weight:500;cursor:pointer;color:var(--foreground);box-shadow:0 1px 4px rgba(0,0,0,0.06);">📖 User Guide</button>
 
 <!-- ================= HOME ================= -->
 <div id="home-view" class="view active">
@@ -2565,6 +2565,7 @@ function navigateTo(viewId) {
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById(viewId).classList.add('active');
   if (viewId === 'gallery-view') renderBeforeAfterGallery();
+  document.getElementById('user-guide-btn').style.display = (viewId === 'user-guide-view') ? 'none' : 'block';
   refreshCartBadges();
   window.scrollTo(0,0);
 }
